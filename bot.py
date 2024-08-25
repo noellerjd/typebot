@@ -84,7 +84,7 @@ async def on_message(message):
         if 'https://' in message.content:
             return
         if random.random() < 0.25:
-        return
+            return
 
         browniemessage = message.content
         response = random.choice(brownie_responses)
