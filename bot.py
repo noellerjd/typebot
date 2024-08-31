@@ -9,6 +9,7 @@ from type_generation import type_thing
 from type_generation import type_upgrade
 from type_generation import type_responses
 from type_generation import brownie_responses
+from type_generation import rrisky_responses
 
 
 # Create an Intents object with the intents you want to enable
@@ -38,7 +39,7 @@ async def on_message(message):
         response = 'who tf is brownie?'
         await message.channel.send(response)
 
-# Return a response after being pinged
+# Return a response after pinging type
 #Procedural Generation moved to seprate files
 
     if message.content.lower() in ['type', '<@382370044144779265>']:
@@ -59,6 +60,9 @@ async def on_message(message):
 
         await message.channel.send(response)
 
+    if message.content.lower() in ['rrisky', 'risky', '<@332537342705401856>']:
+        response = random.choice(rrisky_responses)
+        await message.channel.send (response)
 
     
 
