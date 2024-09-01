@@ -10,6 +10,7 @@ from type_generation import type_upgrade
 from type_generation import type_responses
 from type_generation import brownie_responses
 from type_generation import rrisky_responses
+from type_generation import david_responses
 
 
 # Create an Intents object with the intents you want to enable
@@ -35,7 +36,7 @@ async def on_message(message):
 
 # Return who is brownie after mention
 
-    if message.content.lower() in ['<@1137831321599746158>', 'brownie']:
+    if any(trigger in message.content.lower() for trigger in ['<@1137831321599746158>', 'brownie']):
         response = 'who tf is brownie?'
         await message.channel.send(response)
 
@@ -60,9 +61,13 @@ async def on_message(message):
 
         await message.channel.send(response)
 
-    if message.content.lower() in ['rrisky', 'risky', '<@332537342705401856>']:
+    if any(trigger in message.content.lower() for trigger in ['rrisky', 'risky', '<@332537342705401856>']):
         response = random.choice(rrisky_responses)
-        await message.channel.send (response)
+        await message.channel.send(response)
+
+    if any(trigger in message.content.lower() for trigger in ['david', 'flare', '<@125063361196064768>']):
+        response = random.choice(david_responses)
+        await message.channel.send(response)
 
     
 
