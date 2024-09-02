@@ -44,3 +44,7 @@ rrisky_responses = [
 david_responses = [
     'say less', '100% Certified Dog', 'This you? https://cdn.discordapp.com/attachments/1129622684393812000/1134960746439127110/image0.jpg?ex=66d433d0&is=66d2e250&hm=d852946a2a3f3a179a5abe4d9142246dad08cfefe75d94e294a3482910ce7b0f&', 'If you\'re not under their bed and eating their toes, you\'re not trying hard enough', ':money_mouth: it\'s giving :open_hands: fanum tax :heart: :heart_eyes_cat: :heart:', 'dont worry brother, i have your back', 'Tired of seeing other people outside 😠', 'NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO...cont(1/32)', 'strangle that mf', 'dylan abused and beat me to be racist, and im tired of hiding 😔', ':wink:', 'ill eat ur nail cutter right in front of you ull have long nails forver i swear it'
 ]
+
+random_compliments = [
+    'Typebot loves you <3', 'Typebot thinks you\'re epic 😎', 'You have a great point :)', 'Typebot agrees 🙂', 'You\'re beautiful <3', 'Very well put!', 'You are always saying the best things and I am so proud of you!!', 'Typebot thinks you\'re doing a great job and what you just said was really funny and cool 😎', 'Typebot hopes you\'re having a great day today :)', '👆', 'That\'s what Typebot feels too'
+]

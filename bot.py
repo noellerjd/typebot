@@ -9,7 +9,7 @@ from discord.ext import commands
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
-from type_generation import type_people, type_thing, type_upgrade, type_responses, brownie_responses, rrisky_responses, david_responses
+from type_generation import type_people, type_thing, type_upgrade, type_responses, brownie_responses, rrisky_responses, david_responses, random_compliments
 
 # Create an Intents object with the intents you want to enable
 intents = discord.Intents.default()
@@ -190,6 +190,13 @@ async def on_message(message):
         response = random.choice(brownie_responses)
         response = response.format(browniemessage=browniemessage)
 
+        await message.channel.send(response)
+
+    if message:
+        if random.random() > 0.05:
+            return
+        
+        response = random.choice(random_compliments)
         await message.channel.send(response)
 
 # Run the bot with the token
