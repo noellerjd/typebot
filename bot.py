@@ -137,11 +137,14 @@ async def remindme(interaction: discord.Interaction, duration: str, message: str
 # async def say(interaction: discord.Interaction, thing_to_say: str):
 #     await interaction.response.send_message(f"{interaction.user.name} said: `{thing_to_say}`")
 
+restricted_channel_id = 1280670129939681357
+
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
         return
-
+    if message.channel.id == restricted_channel_id:
+            return
     # Return who is brownie after mention
     if any(trigger in message.content.lower() for trigger in ['<@1137831321599746158>', 'brownie']):
         response = 'who tf is brownie?'
@@ -160,6 +163,7 @@ async def on_message(message):
             return random.choice(type_upgrade)
         
         if random.random() < 0.333:
+
             response = random.choice(type_responses)
         else:
             response = make_sentence()
@@ -181,9 +185,10 @@ async def on_message(message):
 
     # Uses a list of responses that has a 25% chance to send after brownie sends something that isn't a link or gif in the discord chat.
     if message.author.id == 1137831321599746158:
-        if 'https://' in message.content:
+
+        if any(trigger in message.content.lower() for trigger in ['https://', 'insult', 'suggestion']):
             return
-        if random.random() < 0.25:
+        if random.random() < 0.03:
             return
 
         browniemessage = message.content
