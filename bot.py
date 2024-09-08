@@ -188,7 +188,7 @@ async def on_message(message):
 
         if any(trigger in message.content.lower() for trigger in ['https://', 'insult', 'suggestion']):
             return
-        if random.random() < 0.001:
+        if random.random() < 0.99:
             return
 
         browniemessage = message.content
@@ -198,7 +198,7 @@ async def on_message(message):
         await message.channel.send(response)
 
     if message:
-        if random.random() < 0.001:
+        if random.random() < 0.99:
             return
         
         response = random.choice(random_compliments)
