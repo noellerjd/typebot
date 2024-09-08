@@ -146,9 +146,9 @@ async def on_message(message):
     if message.channel.id == restricted_channel_id:
             return
     # Return who is brownie after mention
-    if any(trigger in message.content.lower() for trigger in ['<@1137831321599746158>', 'brownie']):
-        response = 'who tf is brownie?'
-        await message.channel.send(response)
+    # if any(trigger in message.content.lower() for trigger in ['<@1137831321599746158>', 'brownie']):
+    #     response = 'who tf is brownie?'
+    #     await message.channel.send(response)
 
     # Return a response after pinging type
     if message.content.lower() in ['type', '<@382370044144779265>']:
@@ -188,7 +188,7 @@ async def on_message(message):
 
         if any(trigger in message.content.lower() for trigger in ['https://', 'insult', 'suggestion']):
             return
-        if random.random() < 0.03:
+        if random.random() < 0.001:
             return
 
         browniemessage = message.content
@@ -198,7 +198,7 @@ async def on_message(message):
         await message.channel.send(response)
 
     if message:
-        if random.random() > 0.05:
+        if random.random() > 0.001:
             return
         
         response = random.choice(random_compliments)
