@@ -198,7 +198,7 @@ async def on_message(message):
         await message.channel.send(response)
 
     if message:
-        if random.random() > 0.001:
+        if random.random() < 0.001:
             return
         
         response = random.choice(random_compliments)
