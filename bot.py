@@ -198,12 +198,18 @@ async def on_message(message):
 
         await message.channel.send(response)
 
+    if message.channel.id == 1283271970900938833: 
+        if any(trigger in message.content.lower() for trigger in ['crazy']):
+            response = 'Crazy? I was crazy once, They locked me in a room, a rubber room, a rubber room with rats, and rats make me crazy.'
+            await message.channel.send(response)
+
     if message:
         if random.random() < 0.99:
             return
         
         response = random.choice(random_compliments)
         await message.channel.send(response)
+
 
 # Run the bot with the token
 bot.run(TOKEN)
