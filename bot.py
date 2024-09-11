@@ -22,6 +22,9 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
+#status?
+client = discord.Client(activity=discord.Game(name='um'))
+
 ## Remind functionality 
 
 # Get the directory where bot.py is located
