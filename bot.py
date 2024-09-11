@@ -186,7 +186,7 @@ async def on_message(message):
     # Uses a list of responses that has a 25% chance to send after brownie sends something that isn't a link or gif in the discord chat.
     if message.author.id == 1137831321599746158:
 
-        if any(trigger in message.content.lower() for trigger in ['https://', 'insult', 'suggestion']):
+        if any(trigger in message.content.lower() for trigger in ['https://', 'insult', 'suggestion', 'judge']):
             return
         if random.random() < 0.99:
             return
