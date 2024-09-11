@@ -16,14 +16,11 @@ intents = discord.Intents.default()
 intents.message_content = True  # Enable the message_content intent if you want to listen to messages
 
 # Create the bot instance
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="!", status="um", intents=intents)
 
 # Load environment variables
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-
-#status?
-client = discord.Client(activity=discord.Game(name='um'))
 
 ## Remind functionality 
 
