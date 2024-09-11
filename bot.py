@@ -105,7 +105,7 @@ async def on_ready():
     except Exception as e:
         print(e)
     bot.loop.create_task(check_reminders())
-    await bot.change_presence(activity=discord.CustomActivity(name='um', emoji='😳'))
+    await bot.change_presence(activity=discord.CustomActivity(name='umm', emoji='😳'))
 
 # Reminder Command        
 @bot.tree.command(name="remindme")
