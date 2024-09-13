@@ -42,11 +42,16 @@ async def on_ready():
 @bot.tree.command(name="roll")
 @app_commands.describe(dice="Roll dice using the format 'XdY+Z'")
 async def roll(interaction: discord.Interaction, dice: str):
+    # Acknowledge the interaction immediately with a placeholder message
+    await interaction.response.send_message('Rolling...', ephemeral=True)
+
+    await asyncio.sleep(1)
+
     dice_pattern = re.compile(r'(\d*)d(\d+)([+-]\d+)?')
     match = dice_pattern.match(dice)
 
     if not match:
-        await interaction.response.send_message("Invalid dice format. Roll dice using the format 'XdY+Z'.", ephemeral=True)
+        await interaction.edit_original_response(content="Invalid dice format. Roll dice using the format 'XdY+Z'.")
         return
 
     num_dice = int(match.group(1)) if match.group(1) else 1
@@ -63,9 +68,10 @@ async def roll(interaction: discord.Interaction, dice: str):
 
     result = f"{interaction.user.mention} rolled {num_dice}d{dice_size}{match.group(3) or ''}: {roll_details}. Total: {total}"
 
-    await interaction.response.send_message(result)
+    # Edit the original message with the result
+    await interaction.edit_original_response(content=result)
 
-#DnD Character Creator
+# DnD Character Creator
 # active_character_creation = {}
 # # Start Creation
 # @bot.tree.command(name="create_character")
@@ -83,7 +89,7 @@ async def on_message(message):
     
     user_id = message.author.id
 
-    # # Character Creation
+    # Character Creation
     # if user_id in active_character_creation:
     #     current_step = active_character_creation[user_id]["step"]
     
@@ -120,11 +126,11 @@ async def on_message(message):
             response = make_sentence()
 
         await message.channel.send(response)
-
+    # Return a message after mentioning rrisky
     if any(trigger in message.content.lower() for trigger in ['rrisky', 'risky', '<@332537342705401856>']):
         response = random.choice(rrisky_responses)
         await message.channel.send(response)
-
+    # Return a message after mentioning david
     if any(trigger in message.content.lower() for trigger in ['david', 'flare', '<@125063361196064768>']):
         response = random.choice(david_responses)
         await message.channel.send(response)
@@ -135,6 +141,11 @@ async def on_message(message):
             response = 'https://i.imgur.com/SsbFqbv.png'
         else:
             response = 'https://i.imgur.com/H8u43Up.png'
+        await message.channel.send(response)
+
+    # Return a message if json is mentioned
+    if any(trigger in message.content.lower() for trigger in ['json']):
+        response = f'<@{382370044144779265}> has been summoned.'
         await message.channel.send(response)
 
     # Uses a list of responses that has a 25% chance to send after brownie sends something that isn't a link or gif in the discord chat.
@@ -150,12 +161,12 @@ async def on_message(message):
         response = response.format(browniemessage=browniemessage)
 
         await message.channel.send(response)
-
+    # Return a message only to specific channel if someone says crazy
     if message.channel.id == 1283271970900938833: 
         if any(trigger in message.content.lower() for trigger in ['crazy']):
             response = 'Crazy? I was crazy once, They locked me in a room, a rubber room, a rubber room with rats, and rats make me crazy.'
             await message.channel.send(response)
-
+    # 0.01% chance to send a random compliment
     if message:
         if random.random() < 0.99:
             return
