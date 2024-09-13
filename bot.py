@@ -12,7 +12,8 @@ from dotenv import load_dotenv
 from type_generation import type_people, type_thing, type_upgrade, type_responses, brownie_responses, rrisky_responses, david_responses, random_compliments
 
 # from dnd_data import races
-from dnd_data import dnd_races
+from dnd_data import races
+races_list = ", ".join(races)
 
 # Create an Intents object with the intents you want to enable
 intents = discord.Intents.default()
@@ -65,20 +66,40 @@ async def roll(interaction: discord.Interaction, dice: str):
     await interaction.response.send_message(result)
 
 #DnD Character Creator
-active_character_creation = {}
-# Start Creation
-@bot.tree.command(name="create_character")
-async def create_character(interaction: discord.Interaction):
-    races_list = ", ".join(dnd_races)
-    await interaction.response.send_message("Welcome to Typebot character creation! Please choose a race from the following: {races_list}")
-    active_character_creation[interaction.user.id] = {"step": "race"}
+# active_character_creation = {}
+# # Start Creation
+# @bot.tree.command(name="create_character")
+# async def create_character(interaction: discord.Interaction):
+#     # races_list = ", ".join(races)
+#     await interaction.response.send_message(f"Welcome to Typebot character creation! Please choose a race from the following: {races_list}", ephemeral=True)
+#     active_character_creation[interaction.user.id] = {"step": "race"}
 
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
         return
     if message.channel.id == restricted_channel_id:
-            return    
+        return    
+    
+    user_id = message.author.id
+
+    # # Character Creation
+    # if user_id in active_character_creation:
+    #     current_step = active_character_creation[user_id]["step"]
+    
+    # if current_step == "race":
+    #     race_choice = message.content.capitalize()
+
+    #     if race_choice in races:
+    #         race_data = races[race_choice]
+    #         response = f"You chose **{race_choice}**.\n\n*{race_data['description']}*\n\n**Traits:**\n" \
+    #         + "\n".join([f"{key}: {', '.join(value) if isinstance(value, list) else value}" for key, value in race_data["traits"].items()])
+
+    #         await message.channel.send(response + "\nType 'confirm' or select another race.")
+    #         active_character_creation[user_id]["race"] = race_choice
+    #         active_character_creation[user_id]["step"] = "confirm_race"
+    #     else:
+    #         await message.channel.send(f"Invalid race. Please choose a valid race: {races_list}")
 
     # Return a response after pinging type
     if message.content.lower() in ['type', '<@382370044144779265>']:
@@ -110,7 +131,10 @@ async def on_message(message):
 
     # Return a picture of dylans foot after someone says toe
     if message.content == 'toe': 
-        response = 'https://i.imgur.com/H8u43Up.png'
+        if random.random() > 0.9:
+            response = 'https://i.imgur.com/SsbFqbv.png'
+        else:
+            response = 'https://i.imgur.com/H8u43Up.png'
         await message.channel.send(response)
 
     # Uses a list of responses that has a 25% chance to send after brownie sends something that isn't a link or gif in the discord chat.
