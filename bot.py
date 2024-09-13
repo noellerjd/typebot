@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from type_generation import type_people, type_thing, type_upgrade, type_responses, brownie_responses, rrisky_responses, david_responses, random_compliments
 
 # from dnd_data import races
-from dnd_data import races
+from dnd_data import races, classes, backgrounds
 races_list = ", ".join(races)
 
 # Create an Intents object with the intents you want to enable
@@ -43,7 +43,7 @@ async def on_ready():
 @app_commands.describe(dice="Roll dice using the format 'XdY+Z'")
 async def roll(interaction: discord.Interaction, dice: str):
     # Acknowledge the interaction immediately with a placeholder message
-    await interaction.response.send_message('Rolling...', ephemeral=True)
+    await interaction.response.send_message('Rolling...')
 
     await asyncio.sleep(1)
 
@@ -72,13 +72,13 @@ async def roll(interaction: discord.Interaction, dice: str):
     await interaction.edit_original_response(content=result)
 
 # DnD Character Creator
-# active_character_creation = {}
-# # Start Creation
-# @bot.tree.command(name="create_character")
-# async def create_character(interaction: discord.Interaction):
-#     # races_list = ", ".join(races)
-#     await interaction.response.send_message(f"Welcome to Typebot character creation! Please choose a race from the following: {races_list}", ephemeral=True)
-#     active_character_creation[interaction.user.id] = {"step": "race"}
+active_character_creation = {}
+# Start Creation
+@bot.tree.command(name="create_character")
+async def create_character(interaction: discord.Interaction):
+    # races_list = ", ".join(races)
+    await interaction.response.send_message(f"Welcome to Typebot character creation! Please choose a race from the following: {races_list}", ephemeral=True)
+    active_character_creation[interaction.user.id] = {"step": "race"}
 
 @bot.event
 async def on_message(message):
@@ -86,26 +86,99 @@ async def on_message(message):
         return
     if message.channel.id == restricted_channel_id:
         return    
-    
     user_id = message.author.id
 
     # Character Creation
-    # if user_id in active_character_creation:
-    #     current_step = active_character_creation[user_id]["step"]
-    
-    # if current_step == "race":
-    #     race_choice = message.content.capitalize()
+    if user_id in active_character_creation:
+        current_step = active_character_creation[user_id]["step"]
 
-    #     if race_choice in races:
-    #         race_data = races[race_choice]
-    #         response = f"You chose **{race_choice}**.\n\n*{race_data['description']}*\n\n**Traits:**\n" \
-    #         + "\n".join([f"{key}: {', '.join(value) if isinstance(value, list) else value}" for key, value in race_data["traits"].items()])
+        # Step 1: Race Selection
+        if current_step == "race":
+            race_choice = message.content.capitalize()
 
-    #         await message.channel.send(response + "\nType 'confirm' or select another race.")
-    #         active_character_creation[user_id]["race"] = race_choice
-    #         active_character_creation[user_id]["step"] = "confirm_race"
-    #     else:
-    #         await message.channel.send(f"Invalid race. Please choose a valid race: {races_list}")
+            if race_choice in races:
+                race_data = races[race_choice]
+                response = f"You chose **{race_choice}**.\n\n*{race_data['description']}*\n\n**Traits:**\n" \
+                + "\n".join([f"{key}: {', '.join(value) if isinstance(value, list) else value}" for key, value in race_data["traits"].items()])
+
+                await message.channel.send(response + "\nType 'confirm' or select another race.")
+                active_character_creation[user_id]["race"] = race_choice
+                active_character_creation[user_id]["step"] = "confirm_race"
+            else:
+                await message.channel.send(f"Invalid race. Please choose a valid race: {races_list}")
+
+        # Step 2: Confirm Race or Select Another Race
+        elif current_step == "confirm_race":
+            if message.content.lower() == "confirm":
+                class_list = ", ".join(classes.keys())
+                await message.channel.send(f"Race confirmed! Now choose a class from the following: {class_list}")
+                active_character_creation[user_id]["step"] = "class"
+            elif message.content.capitalize() in races:
+                race_choice = message.content.capitalize()
+                race_data = races[race_choice]
+                response = f"You chose **{race_choice}**.\n\n*{race_data['description']}*\n\n**Traits:**\n" \
+                + "\n".join([f"{key}: {', '.join(value) if isinstance(value, list) else value}" for key, value in race_data["traits"].items()])
+
+                await message.channel.send(response + "\nType 'confirm' or select another race.")
+                active_character_creation[user_id]["race"] = race_choice
+            else:
+                await message.channel.send(f"Invalid input. Type 'confirm' to proceed or select another race.")
+
+        # Step 3: Class Selection
+        elif current_step == "class":
+            class_choice = message.content.capitalize()
+
+            if class_choice in classes:
+                class_data = classes[class_choice]
+                response = f"You chose **{class_choice}**.\n\n*{class_data['description']}*\n\n**Primary Ability:** {class_data['abilities']['primary']}\n**Secondary Ability:** {class_data['abilities']['secondary']}"
+                await message.channel.send(response + "\nType 'confirm' or select another class.")
+                active_character_creation[user_id]["class"] = class_choice
+                active_character_creation[user_id]["step"] = "confirm_class"
+            else:
+                await message.channel.send(f"Invalid class. Please choose a valid class: {', '.join(classes.keys())}")
+
+        # Step 4: Confirm Class or Select Another Class
+        elif current_step == "confirm_class":
+            if message.content.lower() == "confirm":
+                background_list = ", ".join(backgrounds.keys())
+                await message.channel.send(f"Class confirmed! Now choose a background from the following: {background_list}")
+                active_character_creation[user_id]["step"] = "background"
+            elif message.content.capitalize() in classes:
+                class_choice = message.content.capitalize()
+                class_data = classes[class_choice]
+                response = f"You chose **{class_choice}**.\n\n*{class_data['description']}*\n\n**Primary Ability:** {class_data['abilities']['primary']}\n**Secondary Ability:** {class_data['abilities']['secondary']}"
+                await message.channel.send(response + "\nType 'confirm' or select another class.")
+                active_character_creation[user_id]["class"] = class_choice
+            else:
+                await message.channel.send(f"Invalid input. Type 'confirm' to proceed or select another class.")
+
+        # Step 5: Background Selection
+        elif current_step == "background":
+            background_choice = message.content.capitalize()
+
+            if background_choice in backgrounds:
+                background_data = backgrounds[background_choice]
+                response = f"You chose **{background_choice}**.\n\n*{background_data['description']}*\n\n**Skills:** {', '.join(background_data['skills'])}"
+                await message.channel.send(response + "\nType 'confirm' or select another background.")
+                active_character_creation[user_id]["background"] = background_choice
+                active_character_creation[user_id]["step"] = "confirm_background"
+            else:
+                await message.channel.send(f"Invalid background. Please choose a valid background: {', '.join(backgrounds.keys())}")
+
+        # Step 6: Confirm Background or Select Another Background
+        elif current_step == "confirm_background":
+            if message.content.lower() == "confirm":
+                final_data = active_character_creation[user_id]
+                await message.channel.send(f"Character creation complete!\n\n**Race**: {final_data['race']}\n**Class**: {final_data['class']}\n**Background**: {final_data['background']}")
+                del active_character_creation[user_id]  # Clean up after character creation is complete
+            elif message.content.capitalize() in backgrounds:
+                background_choice = message.content.capitalize()
+                background_data = backgrounds[background_choice]
+                response = f"You chose **{background_choice}**.\n\n*{background_data['description']}*\n\n**Skills:** {', '.join(background_data['skills'])}"
+                await message.channel.send(response + "\nType 'confirm' or select another background.")
+                active_character_creation[user_id]["background"] = background_choice
+            else:
+                await message.channel.send(f"Invalid input. Type 'confirm' to proceed or select another background.")
 
     # Return a response after pinging type
     if message.content.lower() in ['type', '<@382370044144779265>']:
