@@ -76,7 +76,7 @@ active_character_creation = {}
 @bot.tree.command(name="create_character")
 async def create_character(interaction: discord.Interaction):
     # races_list = ", ".join(races)
-    await interaction.response.send_message(f"Welcome to Typebot character creation! Please choose a race from the following: {races_list}", ephemeral=True)
+    await interaction.response.send_message(f"Welcome to Typebot character creation! Please choose a race from the following: {races_list}. Type 'cancel' at anytime to exit.", ephemeral=True)
     active_character_creation[interaction.user.id] = {"step": "race"}
 
 @bot.event
@@ -91,6 +91,10 @@ async def on_message(message):
     if user_id in active_character_creation:
         current_step = active_character_creation[user_id]["step"]
 
+        if message.content.lower() == "cancel":
+            del active_character_creation[user_id]
+            return
+
         # Step 1: Race Selection
         if current_step == "race":
             race_choice = message.content.capitalize()
@@ -98,32 +102,80 @@ async def on_message(message):
             if race_choice in races:
                 race_data = races[race_choice]
                 response = f"You chose **{race_choice}**.\n\n*{race_data['description']}*\n\n**Traits:**\n" \
-                + "\n".join([f"{key}: {', '.join(value) if isinstance(value, list) else value}" for key, value in race_data["traits"].items()])
+                + "\n".join([f"{key}: {', '.join(value) if isinstance(value, list) else value}" for key, value in race_data["traits"].items() if key != "subrace"])
 
-                await message.channel.send(response + "\nType 'confirm' or select another race.")
+                response += "\nType 'confirm' to proceed or select another race."
+                await message.channel.send(response)
                 active_character_creation[user_id]["race"] = race_choice
                 active_character_creation[user_id]["step"] = "confirm_race"
+
             else:
                 await message.channel.send(f"Invalid race. Please choose a valid race: {races_list}")
 
         # Step 2: Confirm Race or Select Another Race
         elif current_step == "confirm_race":
             if message.content.lower() == "confirm":
-                class_list = ", ".join(classes.keys())
-                await message.channel.send(f"Race confirmed! Now choose a class from the following: {class_list}")
-                active_character_creation[user_id]["step"] = "class"
+                race_choice = active_character_creation[user_id]["race"]
+                race_data = races[race_choice]
+
+                # Check if the race has subraces
+                if "subrace" in race_data["traits"]:
+                    subraces = race_data["traits"]["subrace"]
+                    subrace_list = ", ".join(subraces.keys())
+                    response = f"Race confirmed! Now choose a subrace from the following: {subrace_list}"
+                    await message.channel.send(response)
+                    active_character_creation[user_id]["subraces"] = subraces
+                    active_character_creation[user_id]["step"] = "subrace"
+                else:
+                    # No subraces, proceed to class selection
+                    class_list = ", ".join(classes.keys())
+                    await message.channel.send(f"Race confirmed! Now choose a class from the following: {class_list}")
+                    active_character_creation[user_id]["step"] = "class"
+
             elif message.content.capitalize() in races:
                 race_choice = message.content.capitalize()
                 race_data = races[race_choice]
                 response = f"You chose **{race_choice}**.\n\n*{race_data['description']}*\n\n**Traits:**\n" \
-                + "\n".join([f"{key}: {', '.join(value) if isinstance(value, list) else value}" for key, value in race_data["traits"].items()])
+                + "\n".join([f"{key}: {', '.join(value) if isinstance(value, list) else value}" for key, value in race_data["traits"].items() if key != "subrace"])
 
-                await message.channel.send(response + "\nType 'confirm' or select another race.")
+                response += "\nType 'confirm' to proceed or select another race."
+                await message.channel.send(response)
                 active_character_creation[user_id]["race"] = race_choice
+
             else:
                 await message.channel.send(f"Invalid input. Type 'confirm' to proceed or select another race.")
 
-        # Step 3: Class Selection
+        # Step 3: Subrace Selection (if applicable)
+        elif current_step == "subrace":
+            # Convert input to lowercase and underscores to ensure consistency
+            subrace_choice = message.content.capitalize()
+            print(f'{message.content.capitalize()}')
+
+            if subrace_choice in active_character_creation[user_id]["subraces"]:
+                subrace_data = active_character_creation[user_id]["subraces"][subrace_choice]
+                response = f"You chose **{subrace_choice}**.\n\n*{subrace_data['ability increase']}*\n\n**Special Trait**: {subrace_data['race increase']}"
+                await message.channel.send(response + "\nType 'confirm' to proceed or select another subrace.")
+
+                # Store subrace selection
+                active_character_creation[user_id]["subrace"] = subrace_choice
+                active_character_creation[user_id]["step"] = "confirm_subrace"
+            else:
+                subraces = active_character_creation[user_id]["subraces"]
+                subrace_list = ", ".join(subraces.keys())
+                await message.channel.send(f"Invalid subrace. Please choose from the following: {subrace_list}")
+
+        # Step 4: Confirm Subrace or Choose Another
+        elif current_step == "confirm_subrace":
+            if message.content.lower() == "confirm":
+                class_list = ", ".join(classes.keys())
+                await message.channel.send(f"Subrace confirmed! Now choose a class from the following: {class_list}")
+                active_character_creation[user_id]["step"] = "class"
+            else:
+                subraces = active_character_creation[user_id]["subraces"]
+                subrace_list = ", ".join(subraces.keys())
+                await message.channel.send(f"Invalid input. Please type 'confirm' or choose another subrace: {subrace_list}")
+
+        # Step 5: Class Selection
         elif current_step == "class":
             class_choice = message.content.capitalize()
 
@@ -136,7 +188,7 @@ async def on_message(message):
             else:
                 await message.channel.send(f"Invalid class. Please choose a valid class: {', '.join(classes.keys())}")
 
-        # Step 4: Confirm Class or Select Another Class
+        # Step 6: Confirm Class or Select Another Class
         elif current_step == "confirm_class":
             if message.content.lower() == "confirm":
                 background_list = ", ".join(backgrounds.keys())
@@ -151,7 +203,7 @@ async def on_message(message):
             else:
                 await message.channel.send(f"Invalid input. Type 'confirm' to proceed or select another class.")
 
-        # Step 5: Background Selection
+        # Step 7: Background Selection
         elif current_step == "background":
             background_choice = message.content.capitalize()
 
@@ -164,7 +216,7 @@ async def on_message(message):
             else:
                 await message.channel.send(f"Invalid background. Please choose a valid background: {', '.join(backgrounds.keys())}")
 
-        # Step 6: Confirm Background or Select Another Background
+        # Step 8: Confirm Background or Select Another Background
         elif current_step == "confirm_background":
             if message.content.lower() == "confirm":
                 final_data = active_character_creation[user_id]

@@ -3,9 +3,19 @@ races = {
     "Dwarf": {
       "description": "Dwarf Desc",
       "traits": {
-        "speed": 25,
-        "languages": ["Common", "Brainrot"],
-        "Ability Increase": "Constitution +69"
+        "Speed": f'{25}, *your speed is not reduced by wearing heavy armor*',
+        "Languages": ["Common", "Dwarvish"],
+        "Abilities": "x",
+        "subrace": {
+            "Hill dwarf": {
+                "ability increase": "Wisdom +1, Constitution +2",
+                "race increase": "*Dwarven Toughness*: +1 Max Hit Point, Increases by 1 everytime you gain a level."
+            },
+            "Mountain dwarf": {
+                "ability increase": "Strength +2, Constitution +2",
+                "race increase": "*Dwarven Armor Training*: You have proficiency with light and medium armor"
+            }
+        } 
       }
     },
     "Elf": {
@@ -13,7 +23,7 @@ races = {
       "traits": {
         "speed": 25,
         "languages": ["Common", "Brainrot"],
-        "Ability Increase": "Constitution +69"
+        "ability increase": "Constitution +69"
       }
     },
     "Donkey": {
@@ -21,7 +31,7 @@ races = {
       "traits": {
         "speed": 25,
         "languages": ["Common", "Brainrot"],
-        "Ability Increase": "Constitution +69"
+        "ability increase": "Constitution +69"
       }
     }
 }
