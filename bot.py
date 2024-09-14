@@ -70,14 +70,15 @@ async def roll(interaction: discord.Interaction, dice: str):
     # Edit the original message with the result
     await interaction.edit_original_response(content=result)
 
-# DnD Character Creator
+# DnD Character Creator 
 active_character_creation = {}
+
 # Start Creation
 @bot.tree.command(name="create_character")
 async def create_character(interaction: discord.Interaction):
-    # races_list = ", ".join(races)
-    await interaction.response.send_message(f"Welcome to Typebot character creation! Please choose a race from the following: {races_list}. Type 'cancel' at anytime to exit.", ephemeral=True)
-    active_character_creation[interaction.user.id] = {"step": "race"}
+    races_list = ", ".join(races)
+    await interaction.response.send_message(f"Welcome to Typebot character creation! Please choose a race from the following: {races_list}. Type 'cancel' at any time to exit or 'back' to return to the previous step.", ephemeral=True)
+    active_character_creation[interaction.user.id] = {"step": "race", "previous_step": None}
 
 @bot.event
 async def on_message(message):
@@ -91,9 +92,32 @@ async def on_message(message):
     if user_id in active_character_creation:
         current_step = active_character_creation[user_id]["step"]
 
+        # Allow user to cancel
         if message.content.lower() == "cancel":
             del active_character_creation[user_id]
+            await message.channel.send("Character creation has been cancelled.")
             return
+        
+        # Allow user to go back to the previous step
+        if message.content.lower() == "back":
+            previous_step = active_character_creation[user_id].get("previous_step")
+            if previous_step:
+                active_character_creation[user_id]["step"] = previous_step
+                await message.channel.send(f"Returning to the previous step: {previous_step}. Please make your selection again.")
+                if previous_step == "race":
+                    races_list = ", ".join(races)
+                    await message.channel.send(f"Please choose a race from the following: {races_list}")
+                elif previous_step == "subrace":
+                    subraces = active_character_creation[user_id]["subraces"]
+                    subrace_list = ", ".join(subraces.keys())
+                    await message.channel.send(f"Please choose a subrace from the following: {subrace_list}")
+                elif previous_step == "class":
+                    class_list = ", ".join(classes.keys())
+                    await message.channel.send(f"Please choose a class from the following: {class_list}")
+                elif previous_step == "background":
+                    background_list = ", ".join(backgrounds.keys())
+                    await message.channel.send(f"Please choose a background from the following: {background_list}")
+                return
 
         # Step 1: Race Selection
         if current_step == "race":
@@ -107,6 +131,7 @@ async def on_message(message):
                 response += "\nType 'confirm' to proceed or select another race."
                 await message.channel.send(response)
                 active_character_creation[user_id]["race"] = race_choice
+                active_character_creation[user_id]["previous_step"] = "race"  # Set the previous step
                 active_character_creation[user_id]["step"] = "confirm_race"
 
             else:
@@ -125,11 +150,13 @@ async def on_message(message):
                     response = f"Race confirmed! Now choose a subrace from the following: {subrace_list}"
                     await message.channel.send(response)
                     active_character_creation[user_id]["subraces"] = subraces
+                    active_character_creation[user_id]["previous_step"] = "confirm_race"  # Update previous step
                     active_character_creation[user_id]["step"] = "subrace"
                 else:
                     # No subraces, proceed to class selection
                     class_list = ", ".join(classes.keys())
                     await message.channel.send(f"Race confirmed! Now choose a class from the following: {class_list}")
+                    active_character_creation[user_id]["previous_step"] = "confirm_race"  # Update previous step
                     active_character_creation[user_id]["step"] = "class"
 
             elif message.content.capitalize() in races:
@@ -147,17 +174,17 @@ async def on_message(message):
 
         # Step 3: Subrace Selection (if applicable)
         elif current_step == "subrace":
-            # Convert input to lowercase and underscores to ensure consistency
+            # Normalize subrace input
             subrace_choice = message.content.capitalize()
-            print(f'{message.content.capitalize()}')
 
             if subrace_choice in active_character_creation[user_id]["subraces"]:
                 subrace_data = active_character_creation[user_id]["subraces"][subrace_choice]
                 response = f"You chose **{subrace_choice}**.\n\n*{subrace_data['ability increase']}*\n\n**Special Trait**: {subrace_data['race increase']}"
                 await message.channel.send(response + "\nType 'confirm' to proceed or select another subrace.")
-
+                
                 # Store subrace selection
                 active_character_creation[user_id]["subrace"] = subrace_choice
+                active_character_creation[user_id]["previous_step"] = "subrace"  # Update previous step
                 active_character_creation[user_id]["step"] = "confirm_subrace"
             else:
                 subraces = active_character_creation[user_id]["subraces"]
@@ -220,7 +247,11 @@ async def on_message(message):
         elif current_step == "confirm_background":
             if message.content.lower() == "confirm":
                 final_data = active_character_creation[user_id]
-                await message.channel.send(f"Character creation complete!\n\n**Race**: {final_data['race']}\n**Class**: {final_data['class']}\n**Background**: {final_data['background']}")
+                subrace = final_data['subrace']
+                subrace_data = final_data['subraces'][subrace]
+                print(f'{subrace_data}')
+
+                await message.channel.send(f"Character creation complete!\n\n**Race**: {final_data['race']}\n**Subrace**: {final_data['subrace']}\n**Race traits**: \nAbility Score Increase: {subrace_data['ability increase']}\n {subrace_data['race increase']}\n**Class**: {final_data['class']}\n**Background**: {final_data['background']}")
                 del active_character_creation[user_id]  # Clean up after character creation is complete
             elif message.content.capitalize() in backgrounds:
                 background_choice = message.content.capitalize()
