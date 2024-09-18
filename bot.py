@@ -39,13 +39,12 @@ FFMPEG_OPTIONS = {
 ytdl_format_options = {
     'format': 'bestaudio/best',
     'noplaylist': True,
-    'quiet': True,
-    'nocheckcertificate': True,  # Disable SSL checks
-    'force_generic_extractor': True,  # Try forcing a more generic extractor
+    'verbose': True,  # Enable verbose logging for yt_dlp
+    'nocheckcertificate': True,
+    'force_generic_extractor': True,
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-    'extractor_args': {'youtube': {'player_client': ['android', 'web']}}
+    'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
 }
-
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
 # Function to get video info via YouTube API
@@ -98,7 +97,7 @@ async def join(interaction: discord.Interaction):
         await interaction.response.send_message("You're not in a voice channel.", ephemeral=True)
 
 # Invidious instance URL
-INVIDIOUS_INSTANCE = "yewtu.be"
+INVIDIOUS_INSTANCE = "https://inv.riverside.rocks"  # Example instance
 
 # Function to convert YouTube URL to Invidious URL
 def convert_to_invidious_url(youtube_url):
