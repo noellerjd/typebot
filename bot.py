@@ -3,10 +3,12 @@ import re
 import random
 import asyncio
 import discord
+import yt_dlp as youtube_dl
 from discord import app_commands
 from discord.ext import commands
 # from datetime import datetime, timedelta
 from dotenv import load_dotenv
+
 
 from type_generation import type_people, type_thing, type_upgrade, type_responses, brownie_responses, rrisky_responses, david_responses, random_compliments
 
@@ -16,6 +18,22 @@ intents.message_content = True  # Enable the message_content intent if you want 
 
 # Create the bot instance
 bot = commands.Bot(command_prefix="!", intents=intents)
+
+# ffmpeg options
+FFMPEG_OPTIONS = {
+    'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+    'options': '-vn'
+}
+
+ytdl_format_options = {
+    'format': 'bestaudio/best',
+    'noplaylist': True,
+    'quiet': True,
+    'extract_flat': 'in_playlist'
+}
+
+ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
+
 
 # Load environment variables
 load_dotenv()
@@ -32,7 +50,61 @@ async def on_ready():
     except Exception as e:
         print(e)
     # bot.loop.create_task(check_reminders())
-    await bot.change_presence(activity=discord.CustomActivity(name='umm', emoji='😳'))
+    await bot.change_presence(activity=discord.CustomActivity(name='waspman', emoji='😳'))
+
+# ffmpeg player
+# Typebot command to join the server
+@bot.tree.command(name="join")
+async def join(interaction: discord.Interaction):
+    # Check if the user is in a voice channel
+    if interaction.user.voice:
+        channel = interaction.user.voice.channel
+
+        # Check if the bot is already in a voice channel
+        if interaction.guild.voice_client is None:
+            await channel.connect()  # Connect to the channel
+            await interaction.response.send_message(f"Joined {channel}", ephemeral=True)
+        else:
+            await interaction.guild.voice_client.move_to(channel)  # Move to the new channel if already connected
+            await interaction.response.send_message(f"Moved to {channel}", ephemeral=True)
+    else:
+        await interaction.response.send_message("You're not in a voice channel.", ephemeral=True)
+
+# Command to play song 
+@bot.tree.command(name="play")
+@app_commands.describe(url="YouTube URL of the song to play")
+async def play(interaction: discord.Interaction, url: str):
+    # Check if the user is in a voice channel
+    if interaction.user.voice:
+        channel = interaction.user.voice.channel
+
+        # Check if the bot is already in a voice channel
+        if interaction.guild.voice_client is None:
+            await channel.connect()  # Connect to the channel
+        else:
+            await interaction.guild.voice_client.move_to(channel)  # Move to the new channel if already connected
+
+        await interaction.response.send_message(f"Playing from: {url}", ephemeral=True)
+
+        # Extract audio from YouTube URL
+        loop = asyncio.get_event_loop()
+        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=False))
+        audio_url = data['url']
+
+        # Play audio using FFmpeg
+        interaction.guild.voice_client.play(discord.FFmpegPCMAudio(audio_url, **FFMPEG_OPTIONS))
+    else:
+        await interaction.response.send_message("You're not in a voice channel.", ephemeral=True)
+
+# Command to stop and leave
+@bot.tree.command(name="stop")
+async def stop(interaction: discord.Interaction):
+    if interaction.guild.voice_client:
+        await interaction.guild.voice_client.disconnect()
+        await interaction.response.send_message("Disconnected from the voice channel.", ephemeral=True)
+    else:
+        await interaction.response.send_message("I'm not connected to a voice channel.", ephemeral=True)
+
 
 # Dice Roller
 @bot.tree.command(name="roll")
