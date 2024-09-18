@@ -8,6 +8,7 @@ from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
+from discord import FFmpegPCMAudio
 
 # Load environment variables
 load_dotenv()
@@ -25,11 +26,12 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 # Set up YouTube API client
 youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
+volume_level = 0.1
 
 # ffmpeg options
 FFMPEG_OPTIONS = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-    'options': '-vn',
+    'options': f'-vn -af "volume={volume_level}"',
     'stderr': True  # Log FFmpeg errors to the console
 }
 
@@ -63,6 +65,7 @@ async def get_video_info(youtube, video_id):
     except Exception as e:
         print(f"Error fetching video info: {str(e)}")
         return None, None
+    
 
 # Function to extract video ID from YouTube URL
 def extract_video_id(url):
@@ -110,7 +113,7 @@ def convert_to_invidious_url(youtube_url):
 
 # Updated play command
 @bot.tree.command(name="play")
-@app_commands.describe(url="URL of the song to play (YouTube, SoundCloud, etc.)")
+@app_commands.describe(url="Audio URL of the song to play")
 async def play(interaction: discord.Interaction, url: str):
     if interaction.user.voice:
         channel = interaction.user.voice.channel
@@ -121,18 +124,19 @@ async def play(interaction: discord.Interaction, url: str):
         else:
             await interaction.guild.voice_client.move_to(channel)
 
-        await interaction.response.send_message(f"Fetching audio from the provided URL...", ephemeral=True)
+        await interaction.response.send_message(f"Fetching audio...", ephemeral=True)
 
-        # Extract audio URL using yt-dlp
         try:
+            # Use yt-dlp to extract the direct audio stream URL
+            ytdl = youtube_dl.YoutubeDL({'format': 'bestaudio'})
             data = ytdl.extract_info(url, download=False)
-            audio_url = data['url']
+            audio_url = data['url']  # Extract the URL for the audio stream
 
-            # Inform user of the title
+            # Play audio using FFmpegOpusAudio for better compatibility with streams
+            source = discord.FFmpegOpusAudio(audio_url, **FFMPEG_OPTIONS)
+            interaction.guild.voice_client.play(source, after=lambda e: print(f'Error: {e}') if e else None)
+
             await interaction.edit_original_response(content=f"Now playing: **{data['title']}**")
-
-            # Play audio using FFmpeg
-            interaction.guild.voice_client.play(discord.FFmpegPCMAudio(audio_url, **FFMPEG_OPTIONS))
 
         except youtube_dl.utils.DownloadError as e:
             await interaction.edit_original_response(content=f"Error: {str(e)}")
