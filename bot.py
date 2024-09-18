@@ -97,12 +97,19 @@ async def join(interaction: discord.Interaction):
     else:
         await interaction.response.send_message("You're not in a voice channel.", ephemeral=True)
 
-# Use Invidious instance URL
-INVIDIOUS_INSTANCE = "https://yewtu.be"  # Example Invidious instance, you can try different ones
+# Invidious instance URL
+INVIDIOUS_INSTANCE = "yewtu.be"
 
 # Function to convert YouTube URL to Invidious URL
 def convert_to_invidious_url(youtube_url):
-    return youtube_url.replace("youtube.com", INVIDIOUS_INSTANCE).replace("youtu.be", INVIDIOUS_INSTANCE)
+    # Make sure to use a proper scheme (https://)
+    youtube_url = youtube_url.replace("youtube.com", INVIDIOUS_INSTANCE)
+    youtube_url = youtube_url.replace("youtu.be", INVIDIOUS_INSTANCE)
+    
+    if not youtube_url.startswith("http"):
+        youtube_url = f"https://{youtube_url}"
+    
+    return youtube_url
 
 # Updated play command
 @bot.tree.command(name="play")
@@ -116,17 +123,19 @@ async def play(interaction: discord.Interaction, url: str):
         else:
             await interaction.guild.voice_client.move_to(channel)
 
-        await interaction.response.send_message(f"Fetching video info from YouTube API...", ephemeral=True)
+        await interaction.response.send_message(f"Fetching video info...", ephemeral=True)
 
         # Convert YouTube URL to Invidious URL
         invidious_url = convert_to_invidious_url(url)
 
+        # Print the URL to check if it's correctly formatted
+        print(f"Using Invidious URL: {invidious_url}")
+
         # Attempt to use yt_dlp to extract streamable URL
         try:
-            print(f"Using Invidious URL: {invidious_url}")
             data = ytdl.extract_info(invidious_url, download=False)
             audio_url = data['url']
-            await interaction.edit_original_response(content=f"Now playing from Invidious: **{data['title']}**")
+            await interaction.edit_original_response(content=f"Now playing: **{data['title']}**")
             interaction.guild.voice_client.play(discord.FFmpegPCMAudio(audio_url, **FFMPEG_OPTIONS))
         except youtube_dl.utils.DownloadError as e:
             print(f"yt_dlp error: {str(e)}")
@@ -142,7 +151,6 @@ async def stop(interaction: discord.Interaction):
         await interaction.response.send_message("Disconnected from the voice channel.", ephemeral=True)
     else:
         await interaction.response.send_message("I'm not connected to a voice channel.", ephemeral=True)
-
 
 # Dice Roller
 @bot.tree.command(name="roll")
