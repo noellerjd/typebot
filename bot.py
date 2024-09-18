@@ -6,21 +6,17 @@ import discord
 import yt_dlp as youtube_dl
 from discord import app_commands
 from discord.ext import commands
-# from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 
-# API key for YouTube Data API
 # Load environment variables
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
 restricted_channel_id = 1280670129939681357
 meep_server_id = 1129622683546554479
+
 print(f'YTAPIKEY {YOUTUBE_API_KEY}')
-
-
-from type_generation import type_people, type_thing, type_upgrade, type_responses, brownie_responses, rrisky_responses, david_responses, random_compliments
 
 # Create an Intents object with the intents you want to enable
 intents = discord.Intents.default()
@@ -39,6 +35,7 @@ FFMPEG_OPTIONS = {
     'stderr': True  # Log FFmpeg errors to the console
 }
 
+# YouTubeDL options
 ytdl_format_options = {
     'format': 'bestaudio/best',
     'noplaylist': True,
@@ -51,32 +48,30 @@ ytdl_format_options = {
 
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
-async def get_video_info(youtube, url):
-    video_id = extract_video_id(url)
-    if video_id:
+# Function to get video info via YouTube API
+async def get_video_info(youtube, video_id):
+    try:
         request = youtube.videos().list(
             part="snippet,contentDetails",
             id=video_id
         )
         response = request.execute()
-        
         if response['items']:
             video_info = response['items'][0]
             title = video_info['snippet']['title']
-            audio_info = ytdl.extract_info(url, download=False)
-            audio_url = audio_info['url']
-            return title, audio_url
+            stream_url = f"https://www.youtube.com/watch?v={video_id}"
+            return title, stream_url
         else:
             return None, None
-    return None, None
+    except Exception as e:
+        print(f"Error fetching video info: {str(e)}")
+        return None, None
 
+# Function to extract video ID from YouTube URL
 def extract_video_id(url):
-    # Use regex to find the video ID in the URL
     pattern = re.compile(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*")
     match = pattern.search(url)
     return match.group(1) if match else None
-
-
 
 @bot.event
 async def on_ready():
@@ -86,28 +81,23 @@ async def on_ready():
         print(f"Synced {len(synced)} command(s)")
     except Exception as e:
         print(e)
-    # bot.loop.create_task(check_reminders())
     await bot.change_presence(activity=discord.CustomActivity(name='waspman', emoji='😳'))
 
-# ffmpeg player
-# Typebot command to join the server
+# Join the voice channel
 @bot.tree.command(name="join")
 async def join(interaction: discord.Interaction):
-    # Check if the user is in a voice channel
     if interaction.user.voice:
         channel = interaction.user.voice.channel
-
-        # Check if the bot is already in a voice channel
         if interaction.guild.voice_client is None:
-            await channel.connect()  # Connect to the channel
+            await channel.connect()
             await interaction.response.send_message(f"Joined {channel}", ephemeral=True)
         else:
-            await interaction.guild.voice_client.move_to(channel)  # Move to the new channel if already connected
+            await interaction.guild.voice_client.move_to(channel)
             await interaction.response.send_message(f"Moved to {channel}", ephemeral=True)
     else:
         await interaction.response.send_message("You're not in a voice channel.", ephemeral=True)
 
-# Command to play song 
+# Play a song from YouTube
 @bot.tree.command(name="play")
 @app_commands.describe(url="YouTube URL of the song to play")
 async def play(interaction: discord.Interaction, url: str):
@@ -121,20 +111,31 @@ async def play(interaction: discord.Interaction, url: str):
 
         await interaction.response.send_message(f"Fetching video info from YouTube API...", ephemeral=True)
 
-        # Fetch video info
-        title, stream_url = await get_video_info(youtube, url)
-        
+        # Extract video ID and fetch video info
+        video_id = extract_video_id(url)
+        if video_id:
+            title, stream_url = await get_video_info(youtube, video_id)
+        else:
+            await interaction.edit_original_response(content="Invalid YouTube URL.")
+            return
+
+        # If video info was retrieved
         if not title or not stream_url:
             await interaction.edit_original_response(content="Could not find video or invalid URL.")
             return
-        print(f"Stream URL: {stream_url}")
-        await interaction.edit_original_response(content=f"Now playing: **{title}**")
-        
-        # Play audio using FFmpeg
-        interaction.guild.voice_client.play(discord.FFmpegPCMAudio(stream_url, **FFMPEG_OPTIONS))
+
+        # Attempt to use yt_dlp to extract streamable URL
+        try:
+            print(f"Stream URL: {stream_url}")
+            data = ytdl.extract_info(stream_url, download=False)
+            audio_url = data['url']
+            await interaction.edit_original_response(content=f"Now playing: **{title}**")
+            interaction.guild.voice_client.play(discord.FFmpegPCMAudio(audio_url, **FFMPEG_OPTIONS))
+        except youtube_dl.utils.DownloadError as e:
+            print(f"yt_dlp error: {str(e)}")
+            await interaction.edit_original_response(content="Could not play the video, it may be restricted.")
     else:
         await interaction.response.send_message("You're not in a voice channel.", ephemeral=True)
-
 
 # Command to stop and leave
 @bot.tree.command(name="stop")
