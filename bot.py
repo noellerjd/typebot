@@ -97,7 +97,14 @@ async def join(interaction: discord.Interaction):
     else:
         await interaction.response.send_message("You're not in a voice channel.", ephemeral=True)
 
-# Play a song from YouTube
+# Use Invidious instance URL
+INVIDIOUS_INSTANCE = "https://yewtu.be"  # Example Invidious instance, you can try different ones
+
+# Function to convert YouTube URL to Invidious URL
+def convert_to_invidious_url(youtube_url):
+    return youtube_url.replace("youtube.com", INVIDIOUS_INSTANCE).replace("youtu.be", INVIDIOUS_INSTANCE)
+
+# Updated play command
 @bot.tree.command(name="play")
 @app_commands.describe(url="YouTube URL of the song to play")
 async def play(interaction: discord.Interaction, url: str):
@@ -111,25 +118,15 @@ async def play(interaction: discord.Interaction, url: str):
 
         await interaction.response.send_message(f"Fetching video info from YouTube API...", ephemeral=True)
 
-        # Extract video ID and fetch video info
-        video_id = extract_video_id(url)
-        if video_id:
-            title, stream_url = await get_video_info(youtube, video_id)
-        else:
-            await interaction.edit_original_response(content="Invalid YouTube URL.")
-            return
-
-        # If video info was retrieved
-        if not title or not stream_url:
-            await interaction.edit_original_response(content="Could not find video or invalid URL.")
-            return
+        # Convert YouTube URL to Invidious URL
+        invidious_url = convert_to_invidious_url(url)
 
         # Attempt to use yt_dlp to extract streamable URL
         try:
-            print(f"Stream URL: {stream_url}")
-            data = ytdl.extract_info(stream_url, download=False)
+            print(f"Using Invidious URL: {invidious_url}")
+            data = ytdl.extract_info(invidious_url, download=False)
             audio_url = data['url']
-            await interaction.edit_original_response(content=f"Now playing: **{title}**")
+            await interaction.edit_original_response(content=f"Now playing from Invidious: **{data['title']}**")
             interaction.guild.voice_client.play(discord.FFmpegPCMAudio(audio_url, **FFMPEG_OPTIONS))
         except youtube_dl.utils.DownloadError as e:
             print(f"yt_dlp error: {str(e)}")
