@@ -75,6 +75,10 @@ async def join(interaction: discord.Interaction):
 @app_commands.describe(url="YouTube URL of the song to play")
 async def play(interaction: discord.Interaction, url: str):
     # Check if the user is in a voice channel
+    invidious_instance = "https://yewtu.be"  # Example Invidious instance
+    invidious_url = url.replace("youtube.com", invidious_instance)
+
+
     if interaction.user.voice:
         channel = interaction.user.voice.channel
 
@@ -84,7 +88,7 @@ async def play(interaction: discord.Interaction, url: str):
         else:
             await interaction.guild.voice_client.move_to(channel)  # Move to the new channel if already connected
 
-        await interaction.response.send_message(f"Playing from: {url}", ephemeral=True)
+        await interaction.response.send_message(f"Playing from: {invidious_url}", ephemeral=True)
 
         # Extract audio from YouTube URL
         loop = asyncio.get_event_loop()
