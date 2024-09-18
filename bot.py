@@ -16,8 +16,6 @@ YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
 restricted_channel_id = 1280670129939681357
 meep_server_id = 1129622683546554479
 
-print(f'YTAPIKEY {YOUTUBE_API_KEY}')
-
 # Create an Intents object with the intents you want to enable
 intents = discord.Intents.default()
 intents.message_content = True  # Enable the message_content intent if you want to listen to messages
@@ -117,28 +115,27 @@ async def play(interaction: discord.Interaction, url: str):
     if interaction.user.voice:
         channel = interaction.user.voice.channel
 
+        # Check if the bot is already connected to a voice channel
         if interaction.guild.voice_client is None:
             await channel.connect()
         else:
             await interaction.guild.voice_client.move_to(channel)
 
-        await interaction.response.send_message(f"Fetching video info...", ephemeral=True)
+        await interaction.response.send_message(f"Fetching audio from YouTube...", ephemeral=True)
 
-        # Convert YouTube URL to Invidious URL
-        invidious_url = convert_to_invidious_url(url)
-
-        # Print the URL to check if it's correctly formatted
-        print(f"Using Invidious URL: {invidious_url}")
-
-        # Attempt to use yt_dlp to extract streamable URL
+        # Extract audio URL using yt-dlp
         try:
-            data = ytdl.extract_info(invidious_url, download=False)
+            ytdl = youtube_dl.YoutubeDL({'format': 'bestaudio'})
+            data = ytdl.extract_info(url, download=False)
             audio_url = data['url']
+
             await interaction.edit_original_response(content=f"Now playing: **{data['title']}**")
+
+            # Play audio using FFmpeg
             interaction.guild.voice_client.play(discord.FFmpegPCMAudio(audio_url, **FFMPEG_OPTIONS))
+
         except youtube_dl.utils.DownloadError as e:
-            print(f"yt_dlp error: {str(e)}")
-            await interaction.edit_original_response(content="Could not play the video, it may be restricted.")
+            await interaction.edit_original_response(content=f"Error: {str(e)}")
     else:
         await interaction.response.send_message("You're not in a voice channel.", ephemeral=True)
 
