@@ -110,7 +110,7 @@ def convert_to_invidious_url(youtube_url):
 
 # Updated play command
 @bot.tree.command(name="play")
-@app_commands.describe(url="YouTube URL of the song to play")
+@app_commands.describe(url="URL of the song to play (YouTube, SoundCloud, etc.)")
 async def play(interaction: discord.Interaction, url: str):
     if interaction.user.voice:
         channel = interaction.user.voice.channel
@@ -121,14 +121,14 @@ async def play(interaction: discord.Interaction, url: str):
         else:
             await interaction.guild.voice_client.move_to(channel)
 
-        await interaction.response.send_message(f"Fetching audio from YouTube...", ephemeral=True)
+        await interaction.response.send_message(f"Fetching audio from the provided URL...", ephemeral=True)
 
         # Extract audio URL using yt-dlp
         try:
-            ytdl = youtube_dl.YoutubeDL({'format': 'bestaudio'})
             data = ytdl.extract_info(url, download=False)
             audio_url = data['url']
 
+            # Inform user of the title
             await interaction.edit_original_response(content=f"Now playing: **{data['title']}**")
 
             # Play audio using FFmpeg
