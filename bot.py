@@ -29,7 +29,10 @@ ytdl_format_options = {
     'format': 'bestaudio/best',
     'noplaylist': True,
     'quiet': True,
-    'extract_flat': 'in_playlist'
+    'extract_flat': 'in_playlist',
+    'nocheckcertificate': True,  # Disable SSL check
+    'force_generic_extractor': True,  # Try forcing generic extractor
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
 }
 
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
