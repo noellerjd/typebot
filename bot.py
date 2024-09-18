@@ -71,14 +71,15 @@ async def join(interaction: discord.Interaction):
         await interaction.response.send_message("You're not in a voice channel.", ephemeral=True)
 
 # Command to play song 
-@bot.tree.command(name="play")
-@app_commands.describe(url="YouTube URL of the song to play")
+@bot.tree.command(name="play") 
+@app_commands.describe(url="YouTube/Invidious URL of the song to play")
 async def play(interaction: discord.Interaction, url: str):
+    # Example Invidious instance
+    
+    # Replace YouTube domain with Invidious
+    invidious_url = url.replace("youtube.com", "yewtu.be").replace("youtu.be", "yewtu.be")
+
     # Check if the user is in a voice channel
-    invidious_instance = "https://yewtu.be"  # Example Invidious instance
-    invidious_url = url.replace("youtube.com", invidious_instance)
-
-
     if interaction.user.voice:
         channel = interaction.user.voice.channel
 
@@ -90,15 +91,16 @@ async def play(interaction: discord.Interaction, url: str):
 
         await interaction.response.send_message(f"Playing from: {invidious_url}", ephemeral=True)
 
-        # Extract audio from YouTube URL
+        # Extract audio from the Invidious URL
         loop = asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=False))
+        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(invidious_url, download=False))
         audio_url = data['url']
 
         # Play audio using FFmpeg
         interaction.guild.voice_client.play(discord.FFmpegPCMAudio(audio_url, **FFMPEG_OPTIONS))
     else:
         await interaction.response.send_message("You're not in a voice channel.", ephemeral=True)
+
 
 # Command to stop and leave
 @bot.tree.command(name="stop")
