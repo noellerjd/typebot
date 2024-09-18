@@ -8,6 +8,16 @@ from discord import app_commands
 from discord.ext import commands
 # from datetime import datetime, timedelta
 from dotenv import load_dotenv
+from googleapiclient.discovery import build
+
+# API key for YouTube Data API
+# Load environment variables
+load_dotenv()
+TOKEN = os.getenv('DISCORD_TOKEN')
+YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
+restricted_channel_id = 1280670129939681357
+meep_server_id = 1129622683546554479
+print(f'YTAPIKEY {YOUTUBE_API_KEY}')
 
 
 from type_generation import type_people, type_thing, type_upgrade, type_responses, brownie_responses, rrisky_responses, david_responses, random_compliments
@@ -19,30 +29,54 @@ intents.message_content = True  # Enable the message_content intent if you want 
 # Create the bot instance
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+# Set up YouTube API client
+youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
+
 # ffmpeg options
 FFMPEG_OPTIONS = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-    'options': '-vn'
+    'options': '-vn',
+    'stderr': True  # Log FFmpeg errors to the console
 }
 
 ytdl_format_options = {
     'format': 'bestaudio/best',
     'noplaylist': True,
     'quiet': True,
-    'extract_flat': 'in_playlist',
-    'nocheckcertificate': True,  # Disable SSL check
-    'force_generic_extractor': True,  # Try forcing generic extractor
+    'nocheckcertificate': True,  # Disable SSL checks
+    'force_generic_extractor': True,  # Try forcing a more generic extractor
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'extractor_args': {'youtube': {'player_client': ['android', 'web']}}
 }
 
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
+async def get_video_info(youtube, url):
+    video_id = extract_video_id(url)
+    if video_id:
+        request = youtube.videos().list(
+            part="snippet,contentDetails",
+            id=video_id
+        )
+        response = request.execute()
+        
+        if response['items']:
+            video_info = response['items'][0]
+            title = video_info['snippet']['title']
+            audio_info = ytdl.extract_info(url, download=False)
+            audio_url = audio_info['url']
+            return title, audio_url
+        else:
+            return None, None
+    return None, None
 
-# Load environment variables
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-restricted_channel_id = 1280670129939681357
-meep_server_id = 1129622683546554479
+def extract_video_id(url):
+    # Use regex to find the video ID in the URL
+    pattern = re.compile(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*")
+    match = pattern.search(url)
+    return match.group(1) if match else None
+
+
 
 @bot.event
 async def on_ready():
@@ -74,33 +108,30 @@ async def join(interaction: discord.Interaction):
         await interaction.response.send_message("You're not in a voice channel.", ephemeral=True)
 
 # Command to play song 
-@bot.tree.command(name="play") 
-@app_commands.describe(url="YouTube/Invidious URL of the song to play")
+@bot.tree.command(name="play")
+@app_commands.describe(url="YouTube URL of the song to play")
 async def play(interaction: discord.Interaction, url: str):
-    # Example Invidious instance
-    
-    # Replace YouTube domain with Invidious
-    invidious_url = url.replace("youtube.com", "yewtu.be").replace("youtu.be", "yewtu.be")
-
-    # Check if the user is in a voice channel
     if interaction.user.voice:
         channel = interaction.user.voice.channel
 
-        # Check if the bot is already in a voice channel
         if interaction.guild.voice_client is None:
-            await channel.connect()  # Connect to the channel
+            await channel.connect()
         else:
-            await interaction.guild.voice_client.move_to(channel)  # Move to the new channel if already connected
+            await interaction.guild.voice_client.move_to(channel)
 
-        await interaction.response.send_message(f"Playing from: {invidious_url}", ephemeral=True)
+        await interaction.response.send_message(f"Fetching video info from YouTube API...", ephemeral=True)
 
-        # Extract audio from the Invidious URL
-        loop = asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(invidious_url, download=False))
-        audio_url = data['url']
-
+        # Fetch video info
+        title, stream_url = await get_video_info(youtube, url)
+        
+        if not title or not stream_url:
+            await interaction.edit_original_response(content="Could not find video or invalid URL.")
+            return
+        print(f"Stream URL: {stream_url}")
+        await interaction.edit_original_response(content=f"Now playing: **{title}**")
+        
         # Play audio using FFmpeg
-        interaction.guild.voice_client.play(discord.FFmpegPCMAudio(audio_url, **FFMPEG_OPTIONS))
+        interaction.guild.voice_client.play(discord.FFmpegPCMAudio(stream_url, **FFMPEG_OPTIONS))
     else:
         await interaction.response.send_message("You're not in a voice channel.", ephemeral=True)
 
