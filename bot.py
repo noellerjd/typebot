@@ -10,16 +10,20 @@ from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from discord import FFmpegPCMAudio
 
+from type_generation import type_people, type_thing, type_upgrade, type_responses, brownie_responses, rrisky_responses, david_responses, random_compliments
+
 # Load environment variables
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
 restricted_channel_id = 1280670129939681357
 meep_server_id = 1129622683546554479
+dnd_server_id = 1286406203055935591
 
 # Create an Intents object with the intents you want to enable
 intents = discord.Intents.default()
 intents.message_content = True  # Enable the message_content intent if you want to listen to messages
+intents.members = True
 
 # Create the bot instance
 bot = commands.Bot(command_prefix="!", intents=intents)
@@ -39,7 +43,7 @@ FFMPEG_OPTIONS = {
 ytdl_format_options = {
     'format': 'bestaudio/best',
     'noplaylist': True,
-    'verbose': True,  # Enable verbose logging for yt_dlp
+    # 'verbose': True,  # Enable verbose logging for yt_dlp
     'nocheckcertificate': True,
     'force_generic_extractor': True,
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -72,6 +76,8 @@ def extract_video_id(url):
     pattern = re.compile(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*")
     match = pattern.search(url)
     return match.group(1) if match else None
+
+
 
 @bot.event
 async def on_ready():
@@ -227,6 +233,13 @@ async def whisper(interaction: discord.Interaction, target: discord.User, messag
     # Let the whisperer know the message was sent
     await interaction.response.send_message(f"Whisper sent to {target.mention}", ephemeral=True)
 
+@bot.event
+async def on_member_join(member):
+    if member.guild.id == dnd_server_id:
+        channel = discord.utils.get(member.guild.channels, name="welcome")  # Replace "general" with your preferred channel
+        if channel:
+            welcome_text=random.choice(['Typebot thinks you\'re pretty cool 😎', 'Typebot thinks you\'ve been very naughty 😏', 'Everybody look at them!', 'Kinda cute ngl 😏'])
+            await channel.send(f"Welcome, {member.mention}! {welcome_text}")
 
 
 @bot.event
@@ -236,76 +249,87 @@ async def on_message(message):
     if message.channel.id == restricted_channel_id:
         return    
 
+# DND server specific commands
+    if message.guild.id == dnd_server_id:
+        if message.content.lower() in ['test']:
+            response = 'success'
+            await message.channel.send( response)
+
+
 
 
 # Meep Specific Commands
     # Do not return anything message is if not in the meep server
-    if message.guild.id != meep_server_id:
-        return
-    # Return a response after pinging type
-    if message.content.lower() in ['type', '<@382370044144779265>']:
-        def make_sentence():
-            return " ".join([person(), thing(), upgrade()])
-
-        def person():
-            return random.choice(type_people)
-        def thing(): 
-            return random.choice(type_thing)
-        def upgrade():
-            return random.choice(type_upgrade)
-        
-        if random.random() < 0.333:
-
-            response = random.choice(type_responses)
-        else:
-            response = make_sentence()
-
-        await message.channel.send(response)
-    # Return a message after mentioning rrisky
-    if any(trigger in message.content.lower() for trigger in ['rrisky', 'risky', '<@332537342705401856>']):
-        response = random.choice(rrisky_responses)
-        await message.channel.send(response)
-    # Return a message after mentioning david
-    if any(trigger in message.content.lower() for trigger in ['david', 'flare', '<@125063361196064768>']):
-        response = random.choice(david_responses)
-        await message.channel.send(response)
-    # Return a picture of dylans foot after someone says toe
-    if message.content == 'toe': 
-        if random.random() > 0.9:
-            response = 'https://i.imgur.com/SsbFqbv.png'
-        else:
-            response = 'https://i.imgur.com/H8u43Up.png'
-        await message.channel.send(response)
-    # Return a message if json is mentioned
-    if any(trigger in message.content.lower() for trigger in ['json']):
-        response = f'<@{382370044144779265}> has been summoned.'
-        await message.channel.send(response)
-    # Uses a list of responses that has a 25% chance to send after brownie sends something that isn't a link or gif in the discord chat.
-    if message.author.id == 1137831321599746158:
-
-        if any(trigger in message.content.lower() for trigger in ['https://', 'insult', 'suggestion', 'judge']):
-            return
-        if random.random() < 0.99:
-            return
-
-        browniemessage = message.content
-        response = random.choice(brownie_responses)
-        response = response.format(browniemessage=browniemessage)
-
-        await message.channel.send(response)
-    # Return a message only to specific channel if someone says crazy
-    if message.channel.id == 1283271970900938833: 
-        if any(trigger in message.content.lower() for trigger in ['crazy']):
-            response = 'Crazy? I was crazy once, They locked me in a room, a rubber room, a rubber room with rats, and rats make me crazy.'
+    elif message.guild.id == meep_server_id:
+        if message.content.lower() in ['daddy', 'dad', 'mommy', 'mom']:
+            print(f'test')
+            summon = random.choice(['<@223200575515394048>', '<@125063361196064768>', '<@332537342705401856>', '<@382370044144779265>'])
+            response = f'{summon} has been summoned.'
             await message.channel.send(response)
-    # 0.01% chance to send a random compliment
-    if message:
-        if random.random() < 0.99:
-            return
-        
-        response = random.choice(random_compliments)
-        await message.channel.send(response)
+        # Return a response after pinging type
+        if message.content.lower() in ['type', '<@382370044144779265>']:
+            def make_sentence():
+                return " ".join([person(), thing(), upgrade()])
 
+            def person():
+                return random.choice(type_people)
+            def thing(): 
+                return random.choice(type_thing)
+            def upgrade():
+                return random.choice(type_upgrade)
+            
+            if random.random() < 0.333:
+
+                response = random.choice(type_responses)
+            else:
+                response = make_sentence()
+
+            await message.channel.send(response)
+        # Return a message after mentioning rrisky
+        if any(trigger in message.content.lower() for trigger in ['rrisky', 'risky', '<@332537342705401856>']):
+            response = random.choice(rrisky_responses)
+            await message.channel.send(response)
+        # Return a message after mentioning david
+        if any(trigger in message.content.lower() for trigger in ['david', 'flare', '<@125063361196064768>']):
+            response = random.choice(david_responses)
+            await message.channel.send(response)
+        # Return a picture of dylans foot after someone says toe
+        if message.content == 'toe': 
+            if random.random() > 0.9:
+                response = 'https://i.imgur.com/SsbFqbv.png'
+            else:
+                response = 'https://i.imgur.com/H8u43Up.png'
+            await message.channel.send(response)
+        # Return a message if json is mentioned
+        if any(trigger in message.content.lower() for trigger in ['json']):
+            response = f'<@{382370044144779265}> has been summoned.'
+            await message.channel.send(response)
+        # Uses a list of responses that has a 25% chance to send after brownie sends something that isn't a link or gif in the discord chat.
+        if message.author.id == 1137831321599746158:
+
+            if any(trigger in message.content.lower() for trigger in ['https://', 'insult', 'suggestion', 'judge']):
+                return
+            if random.random() < 0.99:
+                return
+
+            browniemessage = message.content
+            response = random.choice(brownie_responses)
+            response = response.format(browniemessage=browniemessage)
+
+            await message.channel.send(response)
+        # Return a message only to specific channel if someone says crazy
+        if message.channel.id == 1283271970900938833: 
+            if any(trigger in message.content.lower() for trigger in ['crazy']):
+                response = 'Crazy? I was crazy once, They locked me in a room, a rubber room, a rubber room with rats, and rats make me crazy.'
+                await message.channel.send(response)
+        # 0.01% chance to send a random compliment
+        if message:
+            if random.random() < 0.99:
+                return
+            response = random.choice(random_compliments)
+            await message.channel.send(response)
+    else:
+        return
 
 # Run the bot with the token
 bot.run(TOKEN)
