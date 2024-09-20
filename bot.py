@@ -233,6 +233,25 @@ async def whisper(interaction: discord.Interaction, target: discord.User, messag
     # Let the whisperer know the message was sent
     await interaction.response.send_message(f"Whisper sent to {target.mention}", ephemeral=True)
 
+# DM specific whisper
+@bot.tree.command(name="dmwhisper") 
+@app_commands.describe(target="The player to send a secret message to", message="The secret message to send")
+async def whisper(interaction: discord.Interaction, target: discord.User, message: str):
+    guild = interaction.guild  # Get the guild where the command is used
+    dm_role = discord.utils.get(guild.roles, name="DM")  # Replace 'DM' with the exact role name
+    
+    # Check if the target has the "DM" role
+    member = guild.get_member(target.id)  # Get the target's member object
+    
+    if dm_role in member.roles:  # Only send if the target has the DM role
+        # Send a secret message to the target player
+        await target.send(f'{interaction.user.mention} has a DM specific question that they\'d like to remain private:\n\n"{message}"')
+        # Let the whisperer know the message was sent
+        await interaction.response.send_message(f"Whisper sent to {target.mention}", ephemeral=True)
+    else:
+        # Notify the user that the target is not a DM
+        await interaction.response.send_message(f"{target.mention} does not have the DM role.", ephemeral=True)
+
 @bot.event
 async def on_member_join(member):
     if member.guild.id == dnd_server_id:
@@ -241,6 +260,33 @@ async def on_member_join(member):
             welcome_text=random.choice(['Typebot thinks you\'re pretty cool 😎', 'Typebot thinks you\'ve been very naughty 😏', 'Everybody look at them!', 'Kinda cute ngl 😏'])
             await channel.send(f"Welcome, {member.mention}! {welcome_text}")
 
+@bot.event
+async def on_raw_reaction_add(payload):
+    guild = bot.get_guild(payload.guild_id)
+    if payload.message_id == 1286520581923016735:
+        role = discord.utils.get(guild.roles, name="PCs")
+        member = guild.get_member(payload.user_id)
+        
+        # Check if the member already has the role
+        if role and role not in member.roles:
+            await member.add_roles(role)
+            print(f"Assigned {role.name} to {member.name}")
+
+            # Send a message to a specific channel for the first time role assignment
+            channel = guild.get_channel(1286521389309755543)
+            pcs_resources = '<#1286523637658292328>'
+            await channel.send(f"Welcome {member.mention} to the Player Characters! Please feel free to take a look at the channels in {pcs_resources}")
+
+@bot.event
+async def on_raw_reaction_remove(payload):
+    guild = bot.get_guild(payload.guild_id)
+    if payload.message_id == 1286520581923016735:
+        role = discord.utils.get(guild.roles, name="PCs")
+        member = guild.get_member(payload.user_id)
+        
+        if role and role in member.roles:
+            await member.remove_roles(role)
+            print(f"Removed {role.name} from {member.name}")
 
 @bot.event
 async def on_message(message):
@@ -252,11 +298,8 @@ async def on_message(message):
 # DND server specific commands
     if message.guild.id == dnd_server_id:
         if message.content.lower() in ['test']:
-            response = 'success'
+            response = 'test'
             await message.channel.send( response)
-
-
-
 
 # Meep Specific Commands
     # Do not return anything message is if not in the meep server
