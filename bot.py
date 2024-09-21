@@ -3,81 +3,26 @@ import re
 import random
 import asyncio
 import discord
-import yt_dlp as youtube_dl
 from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
-from googleapiclient.discovery import build
-from discord import FFmpegPCMAudio
 
 from type_generation import type_people, type_thing, type_upgrade, type_responses, brownie_responses, rrisky_responses, david_responses, random_compliments
 
 # Load environment variables
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
 restricted_channel_id = 1280670129939681357
 meep_server_id = 1129622683546554479
 dnd_server_id = 1286406203055935591
 
-# Create an Intents object with the intents you want to enable
+# Discord intents enabled
 intents = discord.Intents.default()
-intents.message_content = True  # Enable the message_content intent if you want to listen to messages
+intents.message_content = True 
 intents.members = True
 
 # Create the bot instance
 bot = commands.Bot(command_prefix="!", intents=intents)
-
-# Set up YouTube API client
-youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
-volume_level = 0.1
-
-# ffmpeg options
-FFMPEG_OPTIONS = {
-    'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-    'options': f'-vn -af "volume={volume_level}"',
-    'stderr': True  # Log FFmpeg errors to the console
-}
-
-# YouTubeDL options
-ytdl_format_options = {
-    'format': 'bestaudio/best',
-    'noplaylist': True,
-    # 'verbose': True,  # Enable verbose logging for yt_dlp
-    'nocheckcertificate': True,
-    'force_generic_extractor': True,
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-    'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
-}
-ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
-
-# Function to get video info via YouTube API
-async def get_video_info(youtube, video_id):
-    try:
-        request = youtube.videos().list(
-            part="snippet,contentDetails",
-            id=video_id
-        )
-        response = request.execute()
-        if response['items']:
-            video_info = response['items'][0]
-            title = video_info['snippet']['title']
-            stream_url = f"https://www.youtube.com/watch?v={video_id}"
-            return title, stream_url
-        else:
-            return None, None
-    except Exception as e:
-        print(f"Error fetching video info: {str(e)}")
-        return None, None
-    
-
-# Function to extract video ID from YouTube URL
-def extract_video_id(url):
-    pattern = re.compile(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*")
-    match = pattern.search(url)
-    return match.group(1) if match else None
-
-
 
 @bot.event
 async def on_ready():
@@ -88,75 +33,6 @@ async def on_ready():
     except Exception as e:
         print(e)
     await bot.change_presence(activity=discord.CustomActivity(name='waspman', emoji='😳'))
-
-# Join the voice channel
-@bot.tree.command(name="join")
-async def join(interaction: discord.Interaction):
-    if interaction.user.voice:
-        channel = interaction.user.voice.channel
-        if interaction.guild.voice_client is None:
-            await channel.connect()
-            await interaction.response.send_message(f"Joined {channel}", ephemeral=True)
-        else:
-            await interaction.guild.voice_client.move_to(channel)
-            await interaction.response.send_message(f"Moved to {channel}", ephemeral=True)
-    else:
-        await interaction.response.send_message("You're not in a voice channel.", ephemeral=True)
-
-# Invidious instance URL
-INVIDIOUS_INSTANCE = "https://inv.riverside.rocks"  # Example instance
-
-# Function to convert YouTube URL to Invidious URL
-def convert_to_invidious_url(youtube_url):
-    # Make sure to use a proper scheme (https://)
-    youtube_url = youtube_url.replace("youtube.com", INVIDIOUS_INSTANCE)
-    youtube_url = youtube_url.replace("youtu.be", INVIDIOUS_INSTANCE)
-    
-    if not youtube_url.startswith("http"):
-        youtube_url = f"https://{youtube_url}"
-    
-    return youtube_url
-
-# Updated play command
-@bot.tree.command(name="play")
-@app_commands.describe(url="Audio URL of the song to play")
-async def play(interaction: discord.Interaction, url: str):
-    if interaction.user.voice:
-        channel = interaction.user.voice.channel
-
-        # Check if the bot is already connected to a voice channel
-        if interaction.guild.voice_client is None:
-            await channel.connect()
-        else:
-            await interaction.guild.voice_client.move_to(channel)
-
-        await interaction.response.send_message(f"Fetching audio...", ephemeral=True)
-
-        try:
-            # Use yt-dlp to extract the direct audio stream URL
-            ytdl = youtube_dl.YoutubeDL({'format': 'bestaudio'})
-            data = ytdl.extract_info(url, download=False)
-            audio_url = data['url']  # Extract the URL for the audio stream
-
-            # Play audio using FFmpegOpusAudio for better compatibility with streams
-            source = discord.FFmpegOpusAudio(audio_url, **FFMPEG_OPTIONS)
-            interaction.guild.voice_client.play(source, after=lambda e: print(f'Error: {e}') if e else None)
-
-            await interaction.edit_original_response(content=f"Now playing: **{data['title']}**")
-
-        except youtube_dl.utils.DownloadError as e:
-            await interaction.edit_original_response(content=f"Error: {str(e)}")
-    else:
-        await interaction.response.send_message("You're not in a voice channel.", ephemeral=True)
-
-# Command to stop and leave
-@bot.tree.command(name="stop")
-async def stop(interaction: discord.Interaction):
-    if interaction.guild.voice_client:
-        await interaction.guild.voice_client.disconnect()
-        await interaction.response.send_message("Disconnected from the voice channel.", ephemeral=True)
-    else:
-        await interaction.response.send_message("I'm not connected to a voice channel.", ephemeral=True)
 
 # Dice Roller
 @bot.tree.command(name="roll")
