@@ -3,6 +3,7 @@ import re
 import random
 import asyncio
 import discord
+import json
 from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -23,6 +24,22 @@ intents.members = True
 
 # Create the bot instance
 bot = commands.Bot(command_prefix="!", intents=intents)
+
+# DM XP functions
+# Store user XP
+user_xp = {}
+
+def save_xp_data():
+    with open("xp_data.json", "w") as f:
+        json.dump(user_xp, f)
+
+def load_xp_data():
+    global user_xp
+    try:
+        with open("xp_data.json", "r") as f:
+            user_xp = json.load(f)
+    except FileNotFoundError:
+        user_xp = {}
 
 @bot.event
 async def on_ready():
@@ -127,6 +144,62 @@ async def whisper(interaction: discord.Interaction, target: discord.User, messag
     else:
         # Notify the user that the target is not a DM
         await interaction.response.send_message(f"{target.mention} does not have the DM role.", ephemeral=True)
+
+# DM XP command
+@bot.tree.command(name="dmxp")
+@app_commands.describe(target="The player to award XP to", xp="The amount of XP to award")
+async def award_xp(interaction: discord.Interaction, target: discord.User, xp: int):
+    # Ensure only a DM can use this command
+    if "DM" not in [role.name for role in interaction.user.roles]:
+        await interaction.response.send_message ("You must be a DM to use this command", ephemeral=True)
+        return
+
+    # Award XP to specified player
+    user_id = str(target.id)
+    if user_id in user_xp:
+        user_xp[user_id] += xp
+    else: 
+        user_xp[user_id] = xp
+    
+    # Notify player
+    await target.send(f"You have been awarded {xp} XP!")
+
+    # Confirm in interaction
+    await interaction.response.send_message(f"{xp} XP awarded to {target.mention}", ephemeral=True)
+
+    # Save xp data
+    save_xp_data()
+
+# Check XP command
+@bot.tree.command(name="xp")
+async def check_xp(interaction: discord.Interaction):
+    user_id = str(interaction.user.id)
+    xp = user_xp.get(user_id, 0)
+    await interaction.response.send_message(f"You have {xp} XP.", ephemeral=True)
+
+#  DM XP command for entire role
+@bot.tree.command(name="dmxprole")
+@app_commands.describe(role="The role to award XP to", xp="The amount of XP to award")
+async def award_xp_to_role(interaction: discord.Interaction, role: discord.Role, xp: int):
+    # Check if user is a DM
+    if "DM" not in [role.name for role in interaction.user.roles]:
+        await interaction.response.send_message("You must be a DM to use this command", ephemeral=True)
+        return
+
+    # Get all members with the specific role
+    for member in role.members:
+        user_id = str(member.id)
+        if user_id in user_xp:
+            user_xp[user_id] += xp
+        else:
+            user_xp[user_id] = xp
+
+        # Notify the player
+        await member.send(f'You have been awarded {xp} XP!')
+
+    await interaction.response.send_message(f"{xp} XP awarded to all members with the {role.name} role!", ephemeral=True)
+
+    save_xp_data()
 
 @bot.event
 async def on_member_join(member):
