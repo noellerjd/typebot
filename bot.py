@@ -238,6 +238,25 @@ async def on_raw_reaction_remove(payload):
             print(f"Removed {role.name} from {member.name}")
 
 @bot.event
+async def on_member_update(before:discord.Member, after:discord.Member):
+    guild = bot.get_guild(1129622683546554479)
+    target_role_name="Super Meeper"
+    announcement_channel_id=1223001844217810985
+
+    if before.guild != guild:
+        return
+    
+    target_role = discord.utils.get(guild.roles, name=target_role_name)
+
+    if target_role not in before.roles and target_role in after.roles:
+        channel = guild.get_channel(announcement_channel_id)
+        await channel.send(f"{after.mention} has started boosting the server!")
+
+    elif target_role in before.roles and target_role not in after.roles:
+        channel = guild.get_channel(announcement_channel_id)
+        await channel.send(f'SMH! {after.mention} has stopped boosting the server 😡')
+
+@bot.event
 async def on_message(message):
     if message.author == bot.user:
         return
