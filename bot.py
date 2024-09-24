@@ -16,6 +16,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 restricted_channel_id = 1280670129939681357
 meep_server_id = 1129622683546554479
 dnd_server_id = 1286406203055935591
+personal_server_id = 1288280564155027518
 
 # Discord intents enabled
 intents = discord.Intents.default()
@@ -201,13 +202,39 @@ async def award_xp_to_role(interaction: discord.Interaction, role: discord.Role,
 
     save_xp_data()
 
+# Welcome Server
 @bot.event
 async def on_member_join(member):
+    op_nicknames = {
+        328941743632547840: "Josh",
+        1057523428099366932: "Cody",
+        366764816888758273: "Evan",
+        227241716011368450: "Testing"
+    }
+    op_ids = [1057523428099366932, 328941743632547840, 366764816888758273, 227241716011368450]
+
+    # Welcome for DnD Server
     if member.guild.id == dnd_server_id:
-        channel = discord.utils.get(member.guild.channels, name="welcome")  # Replace "general" with your preferred channel
+        channel = discord.utils.get(member.guild.channels, name="welcome")
         if channel:
             welcome_text=random.choice(['Typebot thinks you\'re pretty cool 😎', 'Typebot thinks you\'ve been very naughty 😏', 'Everybody look at them!', 'Kinda cute ngl 😏'])
             await channel.send(f"Welcome, {member.mention}! {welcome_text}")
+    # Welcome for personal server
+    if member.guild.id == personal_server_id:
+        channel = discord.utils.get(member.guild.channels, name="general")
+        if channel:
+            await channel.send(f"Welcome, {member.mention}!")
+
+        if member.id in op_nicknames:
+            nickname = op_nicknames[member.id]
+            await member.edit(nick=nickname)
+            print(f"Changed {member.name}'s nickname to {nickname}")
+        
+        if member.id in op_ids:
+            op_role = discord.utils.get(member.guild.roles, name="Cho Bois")
+            if op_role: 
+                await member.add_roles(op_role)
+                print(f"{member.name} is recognized as family!")
 
 @bot.event
 async def on_raw_reaction_add(payload):
@@ -237,6 +264,7 @@ async def on_raw_reaction_remove(payload):
             await member.remove_roles(role)
             print(f"Removed {role.name} from {member.name}")
 
+# Meep Boost Check
 @bot.event
 async def on_member_update(before:discord.Member, after:discord.Member):
     guild = bot.get_guild(1129622683546554479)
