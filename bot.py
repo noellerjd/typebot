@@ -26,9 +26,34 @@ intents.members = True
 # Create the bot instance
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+# XP Thresholds
+level_thresholds = {
+    1: 0,
+    2: 300,
+    3: 900,
+    4: 2700,
+    5: 6500,
+    6: 14000,
+    7: 23000,
+    8: 34000,
+    9: 48000,
+    10: 64000,
+    11: 85000,
+    12: 100000,
+    13: 120000,
+    14: 140000,
+    15: 165000,
+    16: 195000,
+    17: 225000,
+    18: 265000,
+    19: 305000,
+    20: 355000
+}
+
 # DM XP functions
 # Store user XP
 user_xp = {}
+user_level = {}
 
 def save_xp_data():
     with open("xp_data.json", "w") as f:
@@ -41,6 +66,13 @@ def load_xp_data():
             user_xp = json.load(f)
     except FileNotFoundError:
         user_xp = {}
+
+def get_user_level(xp):
+    # Return level based on their xp
+    for level, threshold in sorted(level_thresholds.items(), reverse=True):
+        if xp >= threshold:
+            return level
+    return 1 # default to level 1 if below threshold
 
 @bot.event
 async def on_ready():
@@ -165,6 +197,16 @@ async def award_xp(interaction: discord.Interaction, target: discord.User, xp: i
     # Notify player
     await target.send(f"You have been awarded {xp} XP!")
 
+    # Check for level up
+    current_xp = user_xp[user_id]
+    current_level = user_level.get(user_id, 1)
+    new_level = get_user_level(current_xp)
+
+    if new_level > current_level:
+        user_level[user_id] = new_level
+        # Notify user of level up
+        await target.send(f"🎉 Congratulations! You've leveled up to level {new_level}! 🎉")
+
     # Confirm in interaction
     await interaction.response.send_message(f"{xp} XP awarded to {target.mention}", ephemeral=True)
 
@@ -176,7 +218,8 @@ async def award_xp(interaction: discord.Interaction, target: discord.User, xp: i
 async def check_xp(interaction: discord.Interaction):
     user_id = str(interaction.user.id)
     xp = user_xp.get(user_id, 0)
-    await interaction.response.send_message(f"You have {xp} XP.", ephemeral=True)
+    level = user_level.get(user_id, get_user_level(xp))
+    await interaction.response.send_message(f"You have {xp} XP and are level {level}.", ephemeral=True)
 
 #  DM XP command for entire role
 @bot.tree.command(name="dmxprole")
@@ -188,6 +231,7 @@ async def award_xp_to_role(interaction: discord.Interaction, role: discord.Role,
         return
 
     # Get all members with the specific role
+    members_awarded = []
     for member in role.members:
         user_id = str(member.id)
         if user_id in user_xp:
@@ -195,10 +239,18 @@ async def award_xp_to_role(interaction: discord.Interaction, role: discord.Role,
         else:
             user_xp[user_id] = xp
 
-        # Notify the player
-        await member.send(f'You have been awarded {xp} XP!')
+        members_awarded.append(member.name)
 
-    await interaction.response.send_message(f"{xp} XP awarded to all members with the {role.name} role!", ephemeral=True)
+        # Check for level up
+        current_xp = user_xp[user_id]
+        current_level = user_level.get(user_id, 1)
+        new_level = get_user_level(current_xp)
+        if new_level > current_level:
+            user_level[user_id] = new_level
+            # Notify player of level up
+            await member.send(f"🎉 Congratulations you've gained {xp} XP and you've leveled up to level {new_level}! 🎉")
+
+    await interaction.response.send_message(f"{xp} XP awarded to all members with the {role.name} role!")
 
     save_xp_data()
 
@@ -236,6 +288,7 @@ async def on_member_join(member):
                 await member.add_roles(op_role)
                 print(f"{member.name} is recognized as family!")
 
+# Message reaction to change member role
 @bot.event
 async def on_raw_reaction_add(payload):
     guild = bot.get_guild(payload.guild_id)
