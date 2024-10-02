@@ -2,6 +2,7 @@ import os
 import re
 import random
 import asyncio
+import requests
 import discord
 import json
 from discord import app_commands
@@ -257,13 +258,6 @@ async def award_xp_to_role(interaction: discord.Interaction, role: discord.Role,
 # Welcome Server
 @bot.event
 async def on_member_join(member):
-    op_nicknames = {
-        328941743632547840: "Josh",
-        1057523428099366932: "Cody",
-        366764816888758273: "Evan",
-        227241716011368450: "Testing"
-    }
-    op_ids = [1057523428099366932, 328941743632547840, 366764816888758273, 227241716011368450]
 
     # Welcome for DnD Server
     if member.guild.id == dnd_server_id:
@@ -276,17 +270,6 @@ async def on_member_join(member):
         channel = discord.utils.get(member.guild.channels, name="general")
         if channel:
             await channel.send(f"Welcome, {member.mention}!")
-
-        if member.id in op_nicknames:
-            nickname = op_nicknames[member.id]
-            await member.edit(nick=nickname)
-            print(f"Changed {member.name}'s nickname to {nickname}")
-        
-        if member.id in op_ids:
-            op_role = discord.utils.get(member.guild.roles, name="Cho Bois")
-            if op_role: 
-                await member.add_roles(op_role)
-                print(f"{member.name} is recognized as family!")
 
 # Message reaction to change member role
 @bot.event
