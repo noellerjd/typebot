@@ -2,7 +2,6 @@ import os
 import re
 import random
 import asyncio
-import requests
 import discord
 import json
 from discord import app_commands
@@ -83,7 +82,7 @@ async def on_ready():
         print(f"Synced {len(synced)} command(s)")
     except Exception as e:
         print(e)
-    await bot.change_presence(activity=discord.CustomActivity(name='waspman', emoji='😳'))
+    await bot.change_presence(activity=discord.CustomActivity(name='Detective Ninja Bot', emoji='😳'))
 
 # Dice Roller
 @bot.tree.command(name="roll")
