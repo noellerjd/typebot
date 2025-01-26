@@ -402,7 +402,7 @@ async def on_message(message):
 
             await message.channel.send(response)
         # Pick a 'real' winner from wordle winner list
-        if message.channel.id == wordle_channel_id and message.user.id == brownie_id:
+        if message.channel.id == wordle_channel_id and message.author.id == brownie_id:
             if 'Wordle Winners Today' in message.content:
                 response = wordle_winners(message.content)
                 if response:
