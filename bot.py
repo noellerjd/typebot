@@ -405,8 +405,9 @@ async def on_message(message):
         if message.channel.id == wordle_channel_id and message.user.id == brownie_id:
             if 'Wordle Winners Today' in message.content:
                 response = wordle_winners(message.content)
-                print(response)
-                await message.channel.send(response)
+                if response:
+                    print(response)
+                    await message.channel.send(response)
         # test function
         # if message.channel.id == bot_testing_channel_id and message.user.id == type_id:
 
@@ -426,7 +427,10 @@ def wordle_winners(message):
         words = winner_line.split()
         winners.append(words[0])
 
-    if len(winners) > 1:
+    if '@barkman' in winners:
+        return('\U0001F3C6 **__Real__ Wordle Winner Today** \U0001F3C6\n' + f'<@{type_id}>')
+
+    elif len(winners) > 1:
         return('\U0001F3C6 **__Real__ Wordle Winner Today** \U0001F3C6\n' + random.choice(winners))
     
 # Run the bot with the token
