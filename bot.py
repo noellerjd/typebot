@@ -96,7 +96,7 @@ async def on_ready():
         print(f"Synced {len(synced)} command(s)")
     except Exception as e:
         print(e)
-    await bot.change_presence(activity=discord.CustomActivity(name='Detective Ninja Bot', emoji='😳'))
+    await bot.change_presence(activity=discord.CustomActivity(name="Don't type 'toe'", emoji='😳'))
 
 # Dice Roller
 @bot.tree.command(name="roll")
