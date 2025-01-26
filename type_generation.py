@@ -28,7 +28,7 @@ type_upgrade = [
 type_responses = [
     'Amen', 'Godbless', 'I invented transistors', 'Hello :)', 
     'Stung by wasp on big toe 8k resolution', '😈', '🐝', 'I eated a bug :)',
-    'I eated a ghost :)', 'Something is wrong 😳', '<@382370044144779265> 💪😎', 'Real gamers go to https://www.twitch.tv/bungoh and make sure to unfollow and report for Off Twitch Behavior :saluting_face:'
+    'I eated a ghost :)', 'Something is wrong 😳', '<@382370044144779265> 💪😎', 'Real gamers go to https://www.twitch.tv/bungoh and make sure to unfollow and report for Off Twitch Behavior :saluting_face:', 'do be kinda looking like minecraft'
 ]
 
 brownie_responses = [

@@ -23,10 +23,14 @@ personal_server_id = 1288280564155027518
 restricted_channel_id = 1280670129939681357
 wordle_channel_id = 1326175839884148867
 dev_channel_id = 1137836224040673331
-brownie_id = 1137831321599746158
+bot_testing_channel_id = 1276648666928779458
 
 # User IDs
+brownie_id = 1137831321599746158
 type_id = 382370044144779265
+rrisky_id = 332537342705401856
+flare_id = 125063361196064768
+bungoh_id = 223200575515394048
 
 # Discord intents enabled
 intents = discord.Intents.default()
@@ -64,8 +68,6 @@ level_thresholds = {
 # Store user XP
 user_xp = {}
 user_level = {}
-
-
 
 def save_xp_data():
     with open("xp_data.json", "w") as f:
@@ -348,12 +350,11 @@ async def on_message(message):
     # Do not return anything message is if not in the meep server
     elif message.guild.id == meep_server_id:
         if message.content.lower() in ['daddy', 'dad', 'mommy', 'mom']:
-            print(f'test')
-            summon = random.choice(['<@223200575515394048>', '<@125063361196064768>', '<@332537342705401856>', '<@382370044144779265>'])
+            summon = random.choice([f'<@{bungoh_id}>', f'<@{flare_id}>', f'<@{rrisky_id}>', f'<@{type_id}>'])
             response = f'{summon} has been summoned.'
             await message.channel.send(response)
         # Return a response after pinging type
-        if message.content.lower() in ['type', '<@382370044144779265>']:
+        if message.content.lower() in ['type', f'<@{type_id}>']:
             def make_sentence():
                 return " ".join([person(), thing(), upgrade()])
 
@@ -372,11 +373,11 @@ async def on_message(message):
 
             await message.channel.send(response)
         # Return a message after mentioning rrisky
-        if any(trigger in message.content.lower() for trigger in ['rrisky', 'risky', '<@332537342705401856>']):
+        if any(trigger in message.content.lower() for trigger in ['rrisky', 'risky', f'<@{rrisky_id}>']):
             response = random.choice(rrisky_responses)
             await message.channel.send(response)
         # Return a message after mentioning david
-        if any(trigger in message.content.lower() for trigger in ['david', 'flare', '<@125063361196064768>']):
+        if any(trigger in message.content.lower() for trigger in ['david', 'flare', f'<@{flare_id}>']):
             response = random.choice(david_responses)
             await message.channel.send(response)
         # Return a picture of dylans foot after someone says toe
@@ -388,7 +389,7 @@ async def on_message(message):
             await message.channel.send(response)
         # Return a message if json is mentioned
         if 'json' in message.content.lower():
-            response = f'<@{382370044144779265}> has been summoned.'
+            response = f'<@{type_id}> has been summoned.'
             await message.channel.send(response)
         # Uses a list of responses that has a 25% chance to send after brownie sends something that isn't a link or gif in the discord chat.
         if message.author.id == brownie_id:
@@ -406,6 +407,8 @@ async def on_message(message):
                 response = wordle_winners(message.content)
                 print(response)
                 await message.channel.send(response)
+        # test function
+        # if message.channel.id == bot_testing_channel_id and message.user.id == type_id:
 
         # 0.01% chance to send a random compliment
         if message:
@@ -425,7 +428,6 @@ def wordle_winners(message):
 
     if len(winners) > 1:
         return('\U0001F3C6 **__Real__ Wordle Winner Today** \U0001F3C6\n' + random.choice(winners))
-
-
+    
 # Run the bot with the token
 bot.run(TOKEN)
