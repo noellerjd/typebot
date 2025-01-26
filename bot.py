@@ -13,10 +13,20 @@ from type_generation import type_people, type_thing, type_upgrade, type_response
 # Load environment variables
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-restricted_channel_id = 1280670129939681357
+
+# Server IDs
 meep_server_id = 1129622683546554479
 dnd_server_id = 1286406203055935591
 personal_server_id = 1288280564155027518
+
+# Channel IDs
+restricted_channel_id = 1280670129939681357
+wordle_channel_id = 1326175839884148867
+dev_channel_id = 1137836224040673331
+brownie_id = 1137831321599746158
+
+# User IDs
+type_id = 382370044144779265
 
 # Discord intents enabled
 intents = discord.Intents.default()
@@ -54,6 +64,8 @@ level_thresholds = {
 # Store user XP
 user_xp = {}
 user_level = {}
+
+
 
 def save_xp_data():
     with open("xp_data.json", "w") as f:
@@ -368,22 +380,19 @@ async def on_message(message):
             response = random.choice(david_responses)
             await message.channel.send(response)
         # Return a picture of dylans foot after someone says toe
-        if message.content == 'toe': 
+        if message.content.lower() == 'toe': 
             if random.random() > 0.9:
                 response = 'https://i.imgur.com/SsbFqbv.png'
             else:
                 response = 'https://i.imgur.com/H8u43Up.png'
             await message.channel.send(response)
         # Return a message if json is mentioned
-        if any(trigger in message.content.lower() for trigger in ['json']):
+        if 'json' in message.content.lower():
             response = f'<@{382370044144779265}> has been summoned.'
             await message.channel.send(response)
         # Uses a list of responses that has a 25% chance to send after brownie sends something that isn't a link or gif in the discord chat.
-        if message.author.id == 1137831321599746158:
-
-            if any(trigger in message.content.lower() for trigger in ['https://', 'insult', 'suggestion', 'judge']):
-                return
-            if random.random() < 0.99:
+        if message.author.id == brownie_id:
+            if any(trigger in message.content.lower() for trigger in ['https://', 'insult', 'suggestion', 'judge']) or random.random() < 0.99:
                 return
 
             browniemessage = message.content
@@ -391,19 +400,32 @@ async def on_message(message):
             response = response.format(browniemessage=browniemessage)
 
             await message.channel.send(response)
-        # Return a message only to specific channel if someone says crazy
-        if message.channel.id == 1283271970900938833: 
-            if any(trigger in message.content.lower() for trigger in ['crazy']):
-                response = 'Crazy? I was crazy once, They locked me in a room, a rubber room, a rubber room with rats, and rats make me crazy.'
+        # Pick a 'real' winner from wordle winner list
+        if message.channel.id == wordle_channel_id and message.user.id == brownie_id:
+            if 'Wordle Winners Today' in message.content:
+                response = wordle_winners(message.content)
+                print(response)
                 await message.channel.send(response)
+
         # 0.01% chance to send a random compliment
         if message:
             if random.random() < 0.99:
                 return
             response = random.choice(random_compliments)
             await message.channel.send(response)
-    else:
-        return
+
+def wordle_winners(message):
+    winners = []
+    
+    winner_lines = message.splitlines()[1:]
+
+    for winner_line in winner_lines:
+        words = winner_line.split()
+        winners.append(words[0])
+
+    if len(winners) > 1:
+        return('\U0001F3C6 **__Real__ Wordle Winner Today** \U0001F3C6\n' + random.choice(winners))
+
 
 # Run the bot with the token
 bot.run(TOKEN)
