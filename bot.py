@@ -349,6 +349,14 @@ async def on_message(message):
 # Meep Specific Commands
     # Do not return anything message is if not in the meep server
     elif message.guild.id == meep_server_id:
+        # Pick a 'real' winner from wordle winner list
+        if message.channel.id == wordle_channel_id and message.author.id == brownie_id:
+            if 'Wordle Winners Today' in message.content:
+                response = wordle_winners(message.content)
+                if response:
+                    print(response)
+                    await message.channel.send(response)
+        # ping someone when parent is mentioned.
         if message.content.lower() in ['daddy', 'dad', 'mommy', 'mom']:
             summon = random.choice([f'<@{bungoh_id}>', f'<@{flare_id}>', f'<@{rrisky_id}>', f'<@{type_id}>'])
             response = f'{summon} has been summoned.'
@@ -401,13 +409,6 @@ async def on_message(message):
             response = response.format(browniemessage=browniemessage)
 
             await message.channel.send(response)
-        # Pick a 'real' winner from wordle winner list
-        if message.channel.id == wordle_channel_id and message.author.id == brownie_id:
-            if 'Wordle Winners Today' in message.content:
-                response = wordle_winners(message.content)
-                if response:
-                    print(response)
-                    await message.channel.send(response)
         # test function
         # if message.channel.id == bot_testing_channel_id and message.user.id == type_id:
 
@@ -418,6 +419,7 @@ async def on_message(message):
             response = random.choice(random_compliments)
             await message.channel.send(response)
 
+# Pick a real winner from Wordle Winners if there is a tie.
 def wordle_winners(message):
     winners = []
     
