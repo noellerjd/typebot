@@ -24,6 +24,9 @@ restricted_channel_id = 1280670129939681357
 wordle_channel_id = 1326175839884148867
 dev_channel_id = 1137836224040673331
 bot_testing_channel_id = 1276648666928779458
+dnd_test_channel_id = 1335728540418576385
+dnd_general_channel_id = 1286406204976791629
+meep_leaderboard_channel = 1282365851001163786
 
 # User IDs
 brownie_id = 1137831321599746158
@@ -91,6 +94,7 @@ def get_user_level(xp):
 @bot.event
 async def on_ready():
     print("Bot Commands up and running!")
+    load_winner_data()
     try:
         synced = await bot.tree.sync()
         print(f"Synced {len(synced)} command(s)")
@@ -343,8 +347,8 @@ async def on_message(message):
 # DND server specific commands
     if message.guild.id == dnd_server_id:
         if message.content.lower() in ['test']:
-            response = 'test'
-            await message.channel.send( response)
+            response = '<@1276601243292143729>'
+            await message.channel.send(response)
 
 # Meep Specific Commands
     # Do not return anything message is if not in the meep server
@@ -356,6 +360,11 @@ async def on_message(message):
                 if response:
                     print(response)
                     await message.channel.send(response)
+        if message.author.id == brownie_id and message.channel.id == wordle_channel_id:
+            if 'Wordle Winners Today' in message.content:
+                target_channel = message.guild.get_channel(meep_leaderboard_channel)
+                if target_channel:
+                    await winner_tracking(message, target_channel)
         # ping someone when parent is mentioned.
         if message.content.lower() in ['daddy', 'dad', 'mommy', 'mom']:
             summon = random.choice([f'<@{bungoh_id}>', f'<@{flare_id}>', f'<@{rrisky_id}>', f'<@{type_id}>'])
@@ -434,6 +443,98 @@ def wordle_winners(message):
 
     elif len(winners) > 1:
         return('\U0001F3C6 **__Real__ Wordle Winner Today** \U0001F3C6\n' + random.choice(winners))
+
+winner_data = {}
+leaderboard_message_ids = {}
+
+def save_winner_data():
+    with open("winner_data.json", "w") as f:
+        json.dump(winner_data, f)
+
+def load_winner_data():
+    global winner_data
+    try:
+        with open("winner_data.json") as f:
+            content = f.read()
+            if not content.strip():
+                winner_data = {"user_data": {}, "message_ids":{}}
+            else:
+                winner_data = json.loads(content)
+                if "message_ids" not in winner_data:
+                    winner_data["message_ids"] = {}
+    except (FileNotFoundError, json.JSONDecodeError):
+        winner_data = {"user_data": {}, "message_ids": {}}
+
+
+async def winner_tracking(message, target_channel):
+    # load data from winner_data.json
+    load_winner_data()
+    # find users within the message.content
+    user_ids = re.findall(r'<@(\d+)>', message.content)
+
+    # update score within winner_data else set their score.
+    for user_id in user_ids:
+        if user_id in winner_data["user_data"]:
+            winner_data["user_data"][user_id] += 1
+        else: 
+            winner_data["user_data"][user_id] = 1
+
+    # Sort the leaderboard by score.
+    sorted_leaderboard = sorted(
+        winner_data["user_data"].items(), key=lambda x: x[1], reverse=True
+    )
+
+    # Establish leaderboard text
+    leaderboard_text = ""
+    for idx, (user_id, count) in enumerate(sorted_leaderboard, start=1):
+        user_mention = f"<@{user_id}>"
+        leaderboard_text += f"{idx}. {user_mention} - {count} wins\n"
+
+    # leaderboard = []
+
+    # # if I want to just display top 10
+    # # top_ten = sorted_leaderboard[:10]
+
+
+    # for user_id, count in winner_data["user_data"].items():
+    #     leaderboard.append(f"<@{user_id}>: {count} time(s)")
+
+    # leaderboard_message = ":trophy: **Wordle Winners Leaderboard** :trophy:\n" + "\n".join([f'<@{user_id}> - {count} wins' for user_id, count in sorted_leaderboard])
+    # # change to ([f'<@{user_id} - {count} wins' for user_id, count in top_ten]) if only display top 10 
+
+    # Save winner data
+    save_winner_data()
+    # for user_id, count in winner_data.items():
+    #     leaderboard.append(f"<@{user_id}> won: {count} time(s)")
+
+    # Format leaderboard as an embed
+    embed = discord.Embed(
+        title = ":trophy: **Wordle Winners Leaderboard** :trophy:",
+        description=leaderboard_text,
+        color=discord.Color.gold()
+    )
+
+    # establish channel for leaderboard to post to
+    channel_id = str(target_channel.id)
+
+    # Check if a embed has already been sent in channel
+    # if yes, edit the existing embed
+    # if no, create embed
+    if channel_id in winner_data["message_ids"]:
+        try:
+            existing_message = await target_channel.fetch_message(winner_data["message_ids"][channel_id])
+            
+            await existing_message.edit(embed=embed)
+        except discord.NotFound:
+            new_message = await target_channel.send(embed=embed)
+            winner_data["message_ids"][channel_id] = new_message.id
+            save_winner_data()
+    else: 
+        new_message = await target_channel.send(embed=embed)
+        winner_data["message_ids"][channel_id] = new_message.id
+        save_winner_data()
+
+
     
 # Run the bot with the token
 bot.run(TOKEN)
