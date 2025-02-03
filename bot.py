@@ -354,17 +354,22 @@ async def on_message(message):
     # Do not return anything message is if not in the meep server
     elif message.guild.id == meep_server_id:
         # Pick a 'real' winner from wordle winner list
-        if message.channel.id == wordle_channel_id and message.author.id == brownie_id:
+        if message.channel.id == bot_testing_channel_id and message.author.id == type_id:
             if 'Wordle Winners Today' in message.content:
                 response = wordle_winners(message.content)
-                if response:
-                    print(response)
-                    await message.channel.send(response)
-        if message.author.id == brownie_id and message.channel.id == wordle_channel_id:
-            if 'Wordle Winners Today' in message.content:
+        # Update/Create a Wordle Leaderboard based on another bots declaration
                 target_channel = message.guild.get_channel(meep_leaderboard_channel)
                 if target_channel:
                     await winner_tracking(message, target_channel)
+                if response:
+                    await message.channel.send(response)
+
+        # ? Incase I want to remove the 'real' winner function.
+        # if message.author.id == brownie_id and message.channel.id == wordle_channel_id:
+        #     if 'Wordle Winners Today' in message.content:
+        #         target_channel = message.guild.get_channel(meep_leaderboard_channel)
+        #         if target_channel:
+        #             await winner_tracking(message, target_channel)
         # ping someone when parent is mentioned.
         if message.content.lower() in ['daddy', 'dad', 'mommy', 'mom']:
             summon = random.choice([f'<@{bungoh_id}>', f'<@{flare_id}>', f'<@{rrisky_id}>', f'<@{type_id}>'])
@@ -432,17 +437,18 @@ async def on_message(message):
 def wordle_winners(message):
     winners = []
     
-    winner_lines = message.splitlines()[1:]
+    winner_lines = re.findall(r'<@(\d+)>', message)
 
     for winner_line in winner_lines:
-        words = winner_line.split()
-        winners.append(words[0])
+        winners.append(winner_line)
 
-    if '@barkman' in winners:
+    string_type_id = str(type_id)
+
+    if string_type_id in winners and len(winners) > 1:
         return('\U0001F3C6 **__Real__ Wordle Winner Today** \U0001F3C6\n' + f'<@{type_id}>')
 
     elif len(winners) > 1:
-        return('\U0001F3C6 **__Real__ Wordle Winner Today** \U0001F3C6\n' + random.choice(winners))
+        return('\U0001F3C6 **__Real__ Wordle Winner Today** \U0001F3C6\n' + f'<@{random.choice(winners)}>')
 
 winner_data = {}
 leaderboard_message_ids = {}
