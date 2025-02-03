@@ -354,7 +354,7 @@ async def on_message(message):
     # Do not return anything message is if not in the meep server
     elif message.guild.id == meep_server_id:
         # Pick a 'real' winner from wordle winner list
-        if message.channel.id == bot_testing_channel_id and message.author.id == type_id:
+        if message.channel.id == wordle_channel_id and message.author.id == brownie_id:
             if 'Wordle Winners Today' in message.content:
                 response = wordle_winners(message.content)
         # Update/Create a Wordle Leaderboard based on another bots declaration
