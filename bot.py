@@ -351,16 +351,6 @@ async def on_message(message):
         if message.content.lower() in ['test']:
             response = '<@1276601243292143729>'
             await message.channel.send(response)
-        if message.channel.id == dnd_test_channel_id and message.author.id == type_id:
-            if 'Wordle Winners Today' in message.content:
-                response = wordle_winners(message.content)
-        # Update/Create a Wordle Leaderboard based on another bots declaration
-                target_channel = message.guild.get_channel(dnd_test_2_channel_id)
-                original_channel = message.guild.get_channel(dnd_test_channel_id)
-                if target_channel:
-                    await winner_tracking(original_channel, target_channel)
-                if response:
-                    await message.channel.send(response)
 
 # Meep Specific Commands
     # Do not return anything message is if not in the meep server
@@ -368,18 +358,17 @@ async def on_message(message):
         # Pick a 'real' winner from wordle winner list
         if message.channel.id == wordle_channel_id and message.author.id == brownie_id:
             if 'Wordle Winners Today' in message.content:
-                print('trying')
                 response = wordle_winners(message.content)
         # Update/Create a Wordle Leaderboard based on another bots declaration
-                target_channel = message.guild.get_channel(dev_channel_id)
-                original_channel = message.guild.get_channel(bot_testing_channel_id)
+                target_channel = message.guild.get_channel(meep_leaderboard_channel)
+                original_channel = message.guild.get_channel(wordle_channel_id)
                 if target_channel:
                     await winner_tracking(original_channel, target_channel)
                 if response:
                     await message.channel.send(response)
+        # Testing command for leaderboard
         if message.channel.id == bot_testing_channel_id and message.author.id == type_id:
             if '!wordleleaderboard' in message.content:
-                print('Type command entered')
                 target_channel = message.guild.get_channel(meep_leaderboard_channel)
                 original_channel = message.guild.get_channel(wordle_channel_id)
                 if target_channel:
