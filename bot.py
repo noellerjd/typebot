@@ -349,6 +349,15 @@ async def on_message(message):
         if message.content.lower() in ['test']:
             response = '<@1276601243292143729>'
             await message.channel.send(response)
+        # if message.channel.id == dnd_test_channel_id and message.author.id == type_id:
+        #     if 'Wordle Winners Today' in message.content:
+        #         response = wordle_winners(message.content)
+        # # Update/Create a Wordle Leaderboard based on another bots declaration
+        #         target_channel = message.guild.get_channel(dnd_general_channel_id)
+        #         if target_channel:
+        #             await winner_tracking(message, target_channel)
+        #         if response:
+        #             await message.channel.send(response)
 
 # Meep Specific Commands
     # Do not return anything message is if not in the meep server
@@ -494,7 +503,7 @@ async def winner_tracking(message, target_channel):
     leaderboard_text = ""
     for idx, (user_id, count) in enumerate(sorted_leaderboard, start=1):
         user_mention = f"<@{user_id}>"
-        leaderboard_text += f"{idx}. {user_mention} - {count} wins\n"
+        leaderboard_text += f"{user_mention} - {count}\n"
 
     # leaderboard = []
 
@@ -515,7 +524,7 @@ async def winner_tracking(message, target_channel):
 
     # Format leaderboard as an embed
     embed = discord.Embed(
-        title = ":trophy: **Wordle Winners Leaderboard** :trophy:",
+        title = ":trophy: **WORDLE WINNERS LEADERBOARD** :trophy:",
         description=leaderboard_text,
         color=discord.Color.gold()
     )
