@@ -508,15 +508,8 @@ async def winner_tracking(channel_scan, target_channel):
         title = ":trophy: **WORDLE WINNERS LEADERBOARD** :trophy:",
         description=leaderboard_text,
         color=discord.Color.gold(),
+        timestamp=datetime.datetime.now()
     )
-
-    timezone = pytz.timezone('America/New_York')
-
-    now = datetime.datetime.now(timezone)
-    new_time = now + datetime.timedelta(hours=2) 
-    formatted_time = new_time.strftime("%I:%M %p").lstrip('0')
-
-    embed.set_footer(text=f"Today at {formatted_time}")
 
     leaderboard_id = await check_for_existing_leaderboard(target_channel)
 
@@ -530,6 +523,5 @@ async def winner_tracking(channel_scan, target_channel):
         leaderboard_id = new_message.id
 
 
-    
 # Run the bot with the token
 bot.run(TOKEN)
