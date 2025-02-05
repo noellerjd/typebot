@@ -4,6 +4,7 @@ import random
 import asyncio
 import discord
 import datetime
+import pytz
 import json
 from discord import app_commands
 from discord.ext import commands
@@ -426,9 +427,6 @@ async def on_message(message):
             response = response.format(browniemessage=browniemessage)
 
             await message.channel.send(response)
-        # test function
-        # if message.channel.id == bot_testing_channel_id and message.user.id == type_id:
-
         # 0.01% chance to send a random compliment
         if message:
             if random.random() < 0.99:
@@ -512,7 +510,9 @@ async def winner_tracking(channel_scan, target_channel):
         color=discord.Color.gold(),
     )
 
-    now = datetime.datetime.now()
+    timezone = pytz.timezone('US/Eastern')
+
+    now = datetime.datetime.now(timezone)
     new_time = now + datetime.timedelta(hours=2) 
     formatted_time = new_time.strftime("%I:%M %p")
 
