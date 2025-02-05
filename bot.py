@@ -510,11 +510,11 @@ async def winner_tracking(channel_scan, target_channel):
         color=discord.Color.gold(),
     )
 
-    timezone = pytz.timezone('US/Eastern')
+    timezone = pytz.timezone('America/New_York')
 
     now = datetime.datetime.now(timezone)
     new_time = now + datetime.timedelta(hours=2) 
-    formatted_time = new_time.strftime("%I:%M %p")
+    formatted_time = new_time.strftime("%I:%M %p").lstrip('0')
 
     embed.set_footer(text=f"Today at {formatted_time}")
 
