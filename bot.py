@@ -3,41 +3,18 @@ import re
 import random
 import asyncio
 import discord
-import datetime
-import pytz
 import json
 from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
+from leaderboard import wordle_winners, winner_tracking
+import constants as c
 
 from type_generation import type_people, type_thing, type_upgrade, type_responses, brownie_responses, rrisky_responses, david_responses, random_compliments
 
 # Load environment variables
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-
-# Server IDs
-meep_server_id = 1129622683546554479
-dnd_server_id = 1286406203055935591
-personal_server_id = 1288280564155027518
-
-# Channel IDs
-restricted_channel_id = 1280670129939681357
-wordle_channel_id = 1326175839884148867
-dev_channel_id = 1137836224040673331
-bot_testing_channel_id = 1276648666928779458
-dnd_test_channel_id = 1335728540418576385
-dnd_test_2_channel_id = 1336596196655104051
-dnd_general_channel_id = 1286406204976791629
-meep_leaderboard_channel = 1282365851001163786
-
-# User IDs
-brownie_id = 1137831321599746158
-type_id = 382370044144779265
-rrisky_id = 332537342705401856
-flare_id = 125063361196064768
-bungoh_id = 223200575515394048
-typebot_id = 1276601243292143729
 
 # Discord intents enabled
 intents = discord.Intents.default()
@@ -286,7 +263,7 @@ async def on_member_join(member):
             welcome_text=random.choice(['Typebot thinks you\'re pretty cool 😎', 'Typebot thinks you\'ve been very naughty 😏', 'Everybody look at them!', 'Kinda cute ngl 😏'])
             await channel.send(f"Welcome, {member.mention}! {welcome_text}")
     # Welcome for personal server
-    if member.guild.id == personal_server_id:
+    if member.guild.id == c.personal_server_id:
         channel = discord.utils.get(member.guild.channels, name="general")
         if channel:
             await channel.send(f"Welcome, {member.mention}!")
@@ -325,7 +302,8 @@ async def on_raw_reaction_remove(payload):
 async def on_member_update(before:discord.Member, after:discord.Member):
     guild = bot.get_guild(1129622683546554479)
     target_role_name="Super Meeper"
-    announcement_channel_id=1223001844217810985
+    announcement_channel_id=c.super_meepers_channel_id
+    
 
     if before.guild != guild:
         return
@@ -344,43 +322,43 @@ async def on_member_update(before:discord.Member, after:discord.Member):
 async def on_message(message):
     if message.author == bot.user:
         return
-    if message.channel.id == restricted_channel_id:
+    if message.channel.id == c.restricted_channel_id:
         return    
 
 # DND server specific commands
-    if message.guild.id == dnd_server_id:
+    if message.guild.id == c.dnd_server_id:
         if message.content.lower() in ['test']:
             response = '<@1276601243292143729>'
             await message.channel.send(response)
 
 # Meep Specific Commands
     # Do not return anything message is if not in the meep server
-    elif message.guild.id == meep_server_id:
+    elif message.guild.id == c.meep_server_id:
         # Pick a 'real' winner from wordle winner list
-        if message.channel.id == wordle_channel_id and message.author.id == brownie_id:
+        if message.channel.id == c.wordle_channel_id and message.author.id == c.brownie_id:
             if 'Wordle Winners Today' in message.content:
                 response = wordle_winners(message.content)
         # Update/Create a Wordle Leaderboard based on another bots declaration
-                target_channel = message.guild.get_channel(meep_leaderboard_channel)
-                original_channel = message.guild.get_channel(wordle_channel_id)
+                target_channel = message.guild.get_channel(c.meep_leaderboard_channel)
+                original_channel = message.guild.get_channel(c.wordle_channel_id)
                 if target_channel:
                     await winner_tracking(original_channel, target_channel)
                 if response:
                     await message.channel.send(response)
         # Testing command for leaderboard
-        if message.channel.id == bot_testing_channel_id and message.author.id == type_id:
+        if message.channel.id == c.bot_testing_channel_id and message.author.id == c.type_id:
             if '!wordleleaderboard' in message.content:
-                target_channel = message.guild.get_channel(meep_leaderboard_channel)
-                original_channel = message.guild.get_channel(wordle_channel_id)
+                target_channel = message.guild.get_channel(c.meep_leaderboard_channel)
+                original_channel = message.guild.get_channel(c.wordle_channel_id)
                 if target_channel:
                     await winner_tracking(original_channel, target_channel)
         # Return a message after someone says 'daddy', 'dad', 'mommy', or 'mom'
         if message.content.lower() in ['daddy', 'dad', 'mommy', 'mom']:
-            summon = random.choice([f'<@{bungoh_id}>', f'<@{flare_id}>', f'<@{rrisky_id}>', f'<@{type_id}>'])
+            summon = random.choice([f'<@{c.bungoh_id}>', f'<@{c.flare_id}>', f'<@{c.rrisky_id}>', f'<@{c.type_id}>'])
             response = f'{summon} has been summoned.'
             await message.channel.send(response)
         # Return a response after pinging type
-        if message.content.lower() in ['type', f'<@{type_id}>']:
+        if message.content.lower() in ['type', f'<@{c.type_id}>']:
             def make_sentence():
                 return " ".join([person(), thing(), upgrade()])
 
@@ -399,11 +377,11 @@ async def on_message(message):
 
             await message.channel.send(response)
         # Return a message after mentioning rrisky
-        if any(trigger in message.content.lower() for trigger in ['rrisky', 'risky', f'<@{rrisky_id}>']):
+        if any(trigger in message.content.lower() for trigger in ['rrisky', 'risky', f'<@{c.rrisky_id}>']):
             response = random.choice(rrisky_responses)
             await message.channel.send(response)
         # Return a message after mentioning david
-        if any(trigger in message.content.lower() for trigger in ['david', 'flare', f'<@{flare_id}>']):
+        if any(trigger in message.content.lower() for trigger in ['david', 'flare', f'<@{c.flare_id}>']):
             response = random.choice(david_responses)
             await message.channel.send(response)
         # Return a picture of dylans foot after someone says toe
@@ -415,10 +393,10 @@ async def on_message(message):
             await message.channel.send(response)
         # Return a message if json is mentioned
         if 'json' in message.content.lower():
-            response = f'<@{type_id}> has been summoned.'
+            response = f'<@{c.type_id}> has been summoned.'
             await message.channel.send(response)
         # Uses a list of responses that has a 25% chance to send after brownie sends something that isn't a link or gif in the discord chat.
-        if message.author.id == brownie_id:
+        if message.author.id == c.brownie_id:
             if any(trigger in message.content.lower() for trigger in ['https://', 'insult', 'suggestion', 'judge']) or random.random() < 0.99:
                 return
 
@@ -433,95 +411,6 @@ async def on_message(message):
                 return
             response = random.choice(random_compliments)
             await message.channel.send(response)
-
-# Pick a real winner from Wordle Winners if there is a tie.
-def wordle_winners(message):
-    winners = []
-    
-    winner_lines = re.findall(r'<@(\d+)>', message)
-
-    for winner_line in winner_lines:
-        winners.append(winner_line)
-
-    string_type_id = str(type_id)
-
-    if string_type_id in winners and len(winners) > 1:
-        return('\U0001F3C6 **__Real__ Wordle Winner Today** \U0001F3C6\n' + f'<@{type_id}>')
-
-    elif len(winners) > 1:
-        return('\U0001F3C6 **__Real__ Wordle Winner Today** \U0001F3C6\n' + f'<@{random.choice(winners)}>')
-
-# Find all messages in a channel that contain 'Wordle Winners Today'
-async def find_winner_data(channel):
-    messages = []
-    async for message in channel.history(limit=None):
-        if message.author.id == brownie_id and 'Wordle Winners Today' in message.content:
-            messages.append(message.content)
-    return(messages)
-
-# Check if a leaderboard message already exists
-async def check_for_existing_leaderboard(target_channel):
-    found_message = False
-    async for message in target_channel.history(limit=None):
-        if message.author.id == typebot_id:
-            found_message = True
-            return(message.id)
-    if not found_message:
-        return(False)
-
-# Update/Create a Wordle Leaderboard based on another bots declaration
-async def winner_tracking(channel_scan, target_channel):
-    messages = await find_winner_data(channel_scan)
-
-    user_ids = []
-    for msg in messages:
-        user_ids.extend(re.findall(r'<@(\d+)>', msg))
-
-    winner_counts = {"user_data": {}}
-
-    for user_id in user_ids:
-        if user_id in winner_counts["user_data"]:
-            winner_counts["user_data"][user_id] += 1
-        else: 
-            winner_counts["user_data"][user_id] = 1
-
-    winner_list = [(user_id, count) for user_id, count in winner_counts["user_data"].items()]
-
-    sorted_winner_list = sorted(winner_list, key=lambda x: x[1], reverse=True)
-
-    leaderboard_text = ""
-    for idx, (user_id, count) in enumerate(sorted_winner_list, start=1):
-        user_mention = f"<@{user_id}>"
-        leaderboard_text += f"{user_mention} - {count}\n"
-
-    leaderboard = []
-
-    # ? if I want to just display top 10
-    # top_ten = sorted_winner_list[:10]
-
-    for user_id, count in winner_counts["user_data"].items():
-        leaderboard.append(f"<@{user_id}>: {count}")
-
-    leaderboard_message = ":trophy: **Wordle Winners Leaderboard** :trophy:\n" + "\n".join([f'<@{user_id}> - {count} wins' for user_id, count in sorted_winner_list])
-
-    embed = discord.Embed(
-        title = ":trophy: **WORDLE WINNERS LEADERBOARD** :trophy:",
-        description=leaderboard_text,
-        color=discord.Color.gold(),
-        timestamp=datetime.datetime.now()
-    )
-
-    leaderboard_id = await check_for_existing_leaderboard(target_channel)
-
-    if leaderboard_id != False:
-        print('Trying to update existing message')
-        existing_message = await target_channel.fetch_message(leaderboard_id)
-        await existing_message.edit(embed=embed)
-    else:
-        print('Creating new message')
-        new_message = await target_channel.send(embed=embed)
-        leaderboard_id = new_message.id
-
 
 # Run the bot with the token
 bot.run(TOKEN)

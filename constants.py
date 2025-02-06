@@ -1,0 +1,23 @@
+# Server IDs
+meep_server_id = 1129622683546554479
+dnd_server_id = 1286406203055935591
+personal_server_id = 1288280564155027518
+
+# Channel IDs
+restricted_channel_id = 1280670129939681357
+wordle_channel_id = 1326175839884148867
+dev_channel_id = 1137836224040673331
+bot_testing_channel_id = 1276648666928779458
+dnd_test_channel_id = 1335728540418576385
+dnd_test_2_channel_id = 1336596196655104051
+dnd_general_channel_id = 1286406204976791629
+meep_leaderboard_channel = 1282365851001163786
+super_meepers_channel_id = 1223001844217810985
+
+# User IDs
+brownie_id = 1137831321599746158
+type_id = 382370044144779265
+rrisky_id = 332537342705401856
+flare_id = 125063361196064768
+bungoh_id = 223200575515394048
+typebot_id = 1276601243292143729

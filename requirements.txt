@@ -9,4 +9,3 @@ idna==3.8
 multidict==6.0.5
 python-dotenv==1.0.1
 yarl==1.9.4
-pytz==2025.1
