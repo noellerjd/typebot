@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from leaderboard import wordle_winners, winner_tracking
 import constants as c
 
-from type_generation import type_people, type_thing, type_upgrade, type_responses, brownie_responses, rrisky_responses, david_responses, random_compliments
+from type_generation import random_compliments
 
 # Load environment variables
 load_dotenv()
