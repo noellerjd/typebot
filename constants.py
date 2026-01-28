@@ -13,6 +13,7 @@ dnd_test_2_channel_id = 1336596196655104051
 dnd_general_channel_id = 1286406204976791629
 meep_leaderboard_channel = 1282365851001163786
 super_meepers_channel_id = 1223001844217810985
+yip_channel_id = 1466186925030248479
 
 # User IDs
 brownie_id = 1137831321599746158

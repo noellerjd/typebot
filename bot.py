@@ -352,6 +352,7 @@ async def on_message(message):
                 original_channel = message.guild.get_channel(c.wordle_channel_id)
                 if target_channel:
                     await winner_tracking(original_channel, target_channel)
+        if message.channel.id != c.yip_channel_id:
         # # Return a message after someone says 'daddy', 'dad', 'mommy', or 'mom'
         # if message.content.lower() in ['daddy', 'dad', 'mommy', 'mom']:
         #     summon = random.choice([f'<@{c.bungoh_id}>', f'<@{c.flare_id}>', f'<@{c.rrisky_id}>', f'<@{c.type_id}>'])
@@ -385,32 +386,32 @@ async def on_message(message):
         #     response = random.choice(david_responses)
         #     await message.channel.send(response)
         # Return a picture of dylans foot after someone says toe
-        if message.content.lower() == 'toe': 
-            if random.random() > 0.9:
-                response = 'https://i.imgur.com/SsbFqbv.png'
-            else:
-                response = 'https://i.imgur.com/H8u43Up.png'
-            await message.channel.send(response)
-        # Return a message if json is mentioned
-        if 'json' in message.content.lower():
-            response = f'<@{c.type_id}> has been summoned.'
-            await message.channel.send(response)
-        # Uses a list of responses that has a 25% chance to send after brownie sends something that isn't a link or gif in the discord chat.
-        # if message.author.id == c.brownie_id:
-        #     if any(trigger in message.content.lower() for trigger in ['https://', 'insult', 'suggestion', 'judge']) or random.random() < 0.99:
-        #         return
+            if message.content.lower() == 'toe': 
+                if random.random() > 0.9:
+                    response = 'https://i.imgur.com/SsbFqbv.png'
+                else:
+                    response = 'https://i.imgur.com/H8u43Up.png'
+                await message.channel.send(response)
+            # Return a message if json is mentioned
+            if 'json' in message.content.lower():
+                response = f'<@{c.type_id}> has been summoned.'
+                await message.channel.send(response)
+            # Uses a list of responses that has a 25% chance to send after brownie sends something that isn't a link or gif in the discord chat.
+            # if message.author.id == c.brownie_id:
+            #     if any(trigger in message.content.lower() for trigger in ['https://', 'insult', 'suggestion', 'judge']) or random.random() < 0.99:
+            #         return
 
-        #     browniemessage = message.content
-        #     response = random.choice(brownie_responses)
-        #     response = response.format(browniemessage=browniemessage)
+            #     browniemessage = message.content
+            #     response = random.choice(brownie_responses)
+            #     response = response.format(browniemessage=browniemessage)
 
-        #     await message.channel.send(response)
-        # 0.01% chance to send a random compliment
-        if message:
-            if random.random() < 0.99:
-                return
-            response = random.choice(random_compliments)
-            await message.channel.send(response)
+            #     await message.channel.send(response)
+            # 0.01% chance to send a random compliment
+            if message:
+                if random.random() < 0.99:
+                    return
+                response = random.choice(random_compliments)
+                await message.channel.send(response)
 
 # Run the bot with the token
 bot.run(TOKEN)
